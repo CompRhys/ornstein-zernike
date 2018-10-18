@@ -3,9 +3,6 @@ import os
 import numpy as np 
 # import matplotlib.pyplot as plt
 
-# n_part      = [4096]
-n_part      = [16384]
-
 # System parameters
 
 # rho         = [0.4]
@@ -58,14 +55,13 @@ for p2 in energy_a:
                                     timestep    = np.sqrt(0.5) / np.max((np.abs(force[trunc]),100.)) 
                                     # print(timestep)
 
-                                    dictionary  = {'type':'tabulated','rho':p1,'min':r_min,'cutoff':r_max,
-                                                    'timestep':timestep,'particles':p9, }
+                                    dictionary  = {'rho':p1,'min':r_min,'cutoff':r_max}
 
-                                    inpath      = os.path.expanduser('~')+'/Liquids/data/input/'
+                                    inpath      = os.path.expanduser('~')+'/closure/data/input/'
                                     np.save(inpath+'input_9'+format(test_number, "03")+'.npy', dictionary)
 
                                     tables      = np.vstack((potential, force))
-                                    table_path  = os.path.expanduser('~')+'/Liquids/data/tables/'
+                                    table_path  = os.path.expanduser('~')+'/closure/data/tables/'
                                     np.savetxt(table_path+'input_9'+format(test_number, "03")+'.dat', tables)
 
                                     test_number += 1

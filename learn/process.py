@@ -3,7 +3,7 @@ import os
 import re
 import numpy as np
 
-path = os.path.expanduser('~')+'/Liquids/data'
+path = os.path.expanduser('~')+'/closure/data'
 inpath = path+'/tested/'
 outpath = path+'/output/'
 temp_path = path+'/temperature/'

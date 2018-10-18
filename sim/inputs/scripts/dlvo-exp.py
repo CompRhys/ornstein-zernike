@@ -3,9 +3,6 @@ import os
 import numpy as np
 # import matplotlib.pyplot as plt 
 
-# n_part      = [4096]
-n_part      = [16384]
-
 # System parameters
 rho     = [0.3, 0.4, 0.5, 0.6]
 energy  = [3.0, 5.0, 7.0] # 0.5 - 11.0
@@ -44,8 +41,7 @@ for p3 in energy:
                 timestep = np.sqrt(0.5) / np.max((np.abs(force[trunc]),100.)) 
                 # print(timestep)
 
-                dictionary  = {'type':'tabulated','rho':p1,'min':r_min,'cutoff':r_max,
-                                'timestep':timestep,'particles':p9}
+                dictionary  = {'rho':p1,'min':r_min,'cutoff':r_max}
                 inpath      = os.path.expanduser('~')+'/Liquids/data/input/'
                 np.save(inpath+'input_11'+format(test_number, "03")+'.npy', dictionary)
 

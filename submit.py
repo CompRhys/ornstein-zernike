@@ -3,7 +3,7 @@ import numpy as np
 
 def main():
 	path = os.path.expanduser('~')
-	input_path = path+'/Liquids/data/input'
+	input_path = path+'/closure/data/input'
 	files = os.listdir(input_path)
 	print(len(files))
 	for i in range(len(files)):

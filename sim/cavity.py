@@ -7,7 +7,6 @@ import numpy as np
 from core import block, transforms, liquids
 import timeit
 
-
 def main():
     start = timeit.default_timer()
 
@@ -161,9 +160,6 @@ def plot_figures():
     # plt.ylim([-5,10])
 
     plt.show()
-
-
-
 
         
 if __name__ == "__main__":

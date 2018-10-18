@@ -42,8 +42,7 @@ for p3 in energy:
             timestep = np.sqrt(0.5) / np.max((np.abs(force[trunc]),100.)) 
             # print(timestep)
 
-            dictionary  = {'type':'tabulated','rho':p1,'min':r_min,'cutoff':r_max,
-                            'timestep':timestep,'particles':p9}
+            dictionary  = {'rho':p1,'min':r_min,'cutoff':r_max}
             inpath      = os.path.expanduser('~')+'/Liquids/data/input/'
             np.save(inpath+'input_10'+format(test_number, "03")+'.npy', dictionary)
 
