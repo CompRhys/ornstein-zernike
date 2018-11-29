@@ -1,38 +1,12 @@
-"""
-This routine is adapted from :
-https://github.com/manoharan-lab/flyvbjerg-std-err
-
-flyvbjerg_petersen_std_err is free software avaliable under the terms of
-the GNU General Public License as published by the Free Software Foundation.
-
-Copyright 2014, Jerome Fung, Rebecca W. Perry, Thomas G. Dimiduk
-
-original aurthors:
-
-.. moduleauthor:: Jerome Fung <jerome.fung@gmail.com>
-.. moduleauthor:: Rebecca W. Perry <rperry@seas.harvard.edu>
-.. moduleauthor:: Tom Dimiduk <tom@dimiduk.net>
-
-Reference: H. Flyvbjerg and H. G. Petersen, "Error estimates on correlated
-data", J. Chem. Phys. 91, 461--466 (1989).
-
-In this script the routines have been adapted to find the best block length
-for removing correlation from the data as opposed to the standard deviation
-itself. This is necessary as we are taking the assumption that the correlation
-times of all our structural measures should be the same.
-
-The code has also been adapted to handl 2D arrays
-"""
-
 import numpy as np
 import warnings
+
 
 def block_data(series, length):
     """
     This function takes the data an combines it into blocks. Only works with powers of 2.
     """
     return np.mean(series.reshape(-1, length, series.shape[-1]), 1)
-
 
 
 def block_transformation(series):
@@ -57,12 +31,14 @@ def block_transformation(series):
     """
     n_steps = series.shape[0]
     if n_steps & 1:
-       n_steps = n_steps - 1
+        n_steps = n_steps - 1
     indices = np.arange(0, n_steps, 2)
-    blocked_series = (np.take(series, indices, axis = 0) + np.take(series, indices+1, axis = 0))/2.
+    blocked_series = (np.take(series, indices, axis=0) +
+                      np.take(series, indices + 1, axis=0)) / 2.
     return blocked_series
 
-def calculate_blocked_variances(series, npmin = 4):
+
+def calculate_blocked_variances(series, npmin=4):
     """
     Compute a series of blocks and variances.
 
@@ -89,12 +65,13 @@ def calculate_blocked_variances(series, npmin = 4):
 
     def block_var(d, n):
         # see eq. 27 of FP paper
-        return np.var(d, axis = 0)/(n-1)
+        return np.var(d, axis=0) / (n - 1)
+
     def stderr_var(n):
         # see eq. 27 of FP paper
-        return np.sqrt(2./(n-1))
+        return np.sqrt(2. / (n - 1))
 
-    output_var = np.array([block_var(series, n_steps)]) # initialize
+    output_var = np.array([block_var(series, n_steps)])  # initialize
     var_stderr = np.array([stderr_var(n_steps)])
 
     while n_steps > npmin:
@@ -109,7 +86,8 @@ def calculate_blocked_variances(series, npmin = 4):
 
     return output_var, var_stderr
 
-def detect_fixed_point(fp_nvar, fp_sev, full_output = False):
+
+def detect_fixed_point(fp_nvar, fp_sev, full_output=False):
     """
     Find whether the block averages decorrelate the data series to a fixed
     point.
@@ -139,20 +117,20 @@ def detect_fixed_point(fp_nvar, fp_sev, full_output = False):
     correspondingly large standard error of the variance.
 
     """
-    n_trans = fp_nvar.shape[0] # number of block transformations and index
-    n_samples = fp_nvar.shape[1] # number of variables
+    n_trans = fp_nvar.shape[0]  # number of block transformations and index
+    n_samples = fp_nvar.shape[1]  # number of variables
 
     left_index = np.zeros(n_samples, dtype=int)
     right_index = np.zeros(n_samples, dtype=int)
+    best_index = np.zeros(n_samples, dtype=int)
     best_var = np.zeros(n_samples)
     best_length = 1
     converged = np.zeros(n_samples, dtype=bool)
 
-
     for i in np.arange(n_samples):
-        fp_var = fp_nvar[:,i]
+        fp_var = fp_nvar[:, i]
         # Detect left edge
-        for j in np.arange(n_trans)-1:
+        for j in np.arange(n_trans) - 1:
             # ith point inside error bars of next point
             if np.abs(fp_var[j + 1] - fp_var[j]) < fp_var[j + 1] * fp_sev[j + 1]:
                 left_index[i] = j
@@ -165,12 +143,16 @@ def detect_fixed_point(fp_nvar, fp_sev, full_output = False):
 
         # if search succeeds
         if (left_index[i] >= 0) and (right_index[i] >= 0) and (right_index[i] >= left_index[i]):
-            best_index = np.average(np.arange(left_index[i],right_index[i] + 1), 
-                weights = 1./fp_sev[left_index[i]:right_index[i] + 1]).astype(np.int)
-            best_length = max(best_length, np.power(2, best_index))
+            best_index[i] = np.average(np.arange(left_index[i], right_index[i] + 1),
+                                    weights=1. / fp_sev[left_index[i]:right_index[i] + 1]).astype(np.int)
+            best_length = max(best_length, np.power(2, best_index[i]))
             converged[i] = True
         else:
             converged[i] = False
+
+    # print(left_index)
+    # print(best_index)
+    # print(right_index)
 
     if full_output is True:
         return best_length, converged, (left_index, right_index)
@@ -178,7 +160,7 @@ def detect_fixed_point(fp_nvar, fp_sev, full_output = False):
         return best_length, converged
 
 
-def fp_block_length(data, conv_output = False):
+def fp_block_length(data, conv_output=False):
     '''
     Compute standard error using Flyvbjerg-Petersen blocking.
 
@@ -210,7 +192,8 @@ def fp_block_length(data, conv_output = False):
         raise ValueError("invalid dimensions, input 2d or 1d array")
 
     block_trans_var, block_trans_sev = calculate_blocked_variances(data)
-    len_block, conv = detect_fixed_point(block_trans_var, block_trans_sev, False)
+    len_block, conv = detect_fixed_point(
+        block_trans_var, block_trans_sev, False)
 
     if not np.any(conv):
         warnings.warn("Fixed point not found for all samples")
