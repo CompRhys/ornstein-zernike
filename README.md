@@ -9,3 +9,9 @@ This data was then used as an input for the inverse problem of solving to find t
 
 Various machine learning algorithms were applied in order to do this.
 The critical results were that symbolic regression over the broad dataset recovers the hypernetted-chain closure showing that a data driven approach is consistent with current analytical theories. The second signifcant result is that use of a non-local closure relationship offers increased efficacy when compared to local closure relationships. Non-locality is intractible analytically and so this demonstrates the fact that machine learning allows us to gain further predictive insight into physical systems that is otherwise impractical to obtain.
+
+# Todo:
+* use python package pyblock for blocking? if we take cavity region results this should be fine
+* write cavity measurement simulations
+* write post-processing to combine the two regimes
+* 
