@@ -15,7 +15,7 @@ def main(input_file):
 
     density = 0.7
     n_part = 512
-    n_test = 2
+    n_test = 1
 
     temperature = 1.
     timestep = 0.005
@@ -24,8 +24,7 @@ def main(input_file):
     burn_iterations_max = 16
 
     sampling_steps = 8
-    diffusive_steps = 1000
-    sampling_iterations = 500  # choose 2**n for fp method
+    sampling_iterations = 8192   # choose 2**n for fp method
     dr = 0.02
 
     # Setup Espresso Environment
@@ -39,28 +38,22 @@ def main(input_file):
                                   temperature, burn_steps,
                                   burn_iterations_max)
 
-    r_size_max = system.box_l[0] * (3.**.5) / 2
-    bins = np.ceil(r_size_max / dr).astype(int)
-    r = np.arange(dr, dr * (bins + 1), dr)
+    psi = sample.get_reference(system, sampling_iterations,
+                            sampling_steps, n_part)
 
-    cav = sample.get_external(system, sampling_iterations,
-                                diffusive_steps, sampling_steps, n_part,
-                                dr, bins)
+    # todo estimate the error in psi using DDA
 
     path = os.path.expanduser('~')
     output_path = path + '/masters/closure/data/raw/'
     test_number = re.findall('\d+', input_file)[0]
 
-    cav_out = np.column_stack((r, cav))
-    np.savetxt(output_path + 'cav_' + test_number + '.dat', cav_out)
+    np.savetxt(output_path + 'ref_' + test_number + '.dat', [psi[-1]])
 
     plt.figure()
-    plt.plot(r, cav)
+    plt.plot(range(len(psi)), psi)
     plt.show()
 
 
-
-
 if __name__ == "__main__":
-    input_file=sys.argv[1]
+    input_file = sys.argv[1]
     main(input_file)

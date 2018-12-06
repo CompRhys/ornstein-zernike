@@ -16,6 +16,9 @@ def main(input_path, input_number):
     dat = np.loadtxt(input_path+'dat_'+input_number+'.dat')
     rdf = np.loadtxt(input_path+'rdf_'+input_number+'.dat')
     sq = np.loadtxt(input_path+'sq_'+input_number+'.dat')
+    phi = np.loadtxt(input_path+'phi_'+input_number+'.dat')
+    ref = np.loadtxt(input_path+'ref_'+input_number+'.dat')
+    cav = np.loadtxt(input_path+'cav_'+input_number+'.dat')
 
     density = dat[0]
     box_l = dat[1]
@@ -23,6 +26,10 @@ def main(input_path, input_number):
 
     r = rdf[:,0]
     rdf = rdf[:,1:].T
+    phi = phi[:,1]
+
+    r2 = cav[:,0]
+    cav = cav[:,1]/ref
 
     q = sq[:,0]
     sq = sq[:,1:].T
@@ -35,7 +42,7 @@ def main(input_path, input_number):
     sw_ind = 5
 
     # rdf = transforms.smooth_function(rdf)
-    sq = transforms.smooth_function(sq)
+    # sq = transforms.smooth_function(sq)
 
     # Find block size to remove correlations
     block_size = block.fp_block_length(rdf)
@@ -69,8 +76,6 @@ def main(input_path, input_number):
     avg_sq_switch = np.mean(sq_switch, axis=0)
     err_sq_switch = np.sqrt(np.var(sq_switch, axis=0, ddof=1) / sq_switch.shape[0])
 
-    print(err_sq_switch)
-
     # evaluate c(r) from corrected structure factor
     cr_swtch, r_swtch = transforms.sq_to_cr(r_bins, density, sq_switch, q_fft)
     avg_cr_swtch = np.mean(cr_swtch, axis=0)
@@ -81,6 +86,9 @@ def main(input_path, input_number):
     cr_fft = transforms.hr_to_cr(r_bins, density, block_rdf - 1, r)
     avg_cr_fft = np.mean(cr_fft, axis=0)
     err_cr_fft = np.sqrt(np.var(cr_fft, axis=0, ddof=1) / cr_fft.shape[0])
+
+    print(r)
+    print(r2)
 
     if save:
         save_output()
@@ -115,6 +123,11 @@ def main(input_path, input_number):
         plt.ylabel('$S(q), W(q)$')
         plt.legend()
         plt.tight_layout()
+
+        plt.figure()
+        plt.plot(r, np.exp(phi)*avg_rdf)
+        plt.plot(r2, cav)
+
 
         plt.show()
 

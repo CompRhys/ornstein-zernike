@@ -4,16 +4,15 @@ import re
 import espressomd
 import timeit
 import numpy as np
-from core import liquids
+from core import setup, initialise, sample
 
 
 def main(input_file):
     start = timeit.default_timer()
 
     # Simulation Parameters
-    density = 0.6
-    n_part = 4096
-
+    density = 0.7
+    n_part = 1024
     temperature = 1.
     timestep = 0.005
 
@@ -22,30 +21,32 @@ def main(input_file):
 
     sampling_steps = 8
     sampling_iterations = 1024    # choose 2**n for fp method
-    dr = 0.025
+    dr = 0.02
 
     # Setup Espresso Environment
-    system = liquids.initialise_system(input_file, density, n_part)
+    system = setup.setup_box(input_file, density, n_part)
 
     # Disperse Particles to energy minimum
-    min_dist = liquids.disperse_energy(system, temperature, timestep)
+    initialise.disperse_energy(system, temperature, timestep)
 
     # Integrate the system to warm up to specified temperature
-    liquids.equilibrate_system(system, timestep,
-                               temperature, burn_steps,
-                               burn_iterations_max)
+    initialise.equilibrate_system(system, timestep,
+                                  temperature, burn_steps,
+                                  burn_iterations_max)
 
-    # 8 / (2*pi / L) means we take s(q) up to q = 8 i.e. past principle peak
+    # order of 8 / (2*pi / L) means we take s(q) up to q = 8 i.e. past
+    # principle peak
     sq_order = np.ceil(4 * system.box_l[0] / np.pi).astype(int)
 
     # Sample the RDF for the system
-    rdf, r, sq, q, kinetic_temp, t = liquids.sample_combo(system, timestep, sampling_iterations,
-                                                          dr, sq_order, sampling_steps)
+    rdf, r, sq, q, kinetic_temp, t = sample.get_bulk(system, timestep, 
+                                                    sampling_iterations, dr, 
+                                                    sq_order, sampling_steps)
 
     # Extract the interaction potential used by the model
-    phi = liquids.sample_phi(system, r)
+    phi = sample.get_phi(system, r)
 
-    dat_out = np.array([density,system.box_l[0],len(r), n_part])
+    dat_out = np.array([density, system.box_l[0], len(r), n_part])
     rdf_out = np.column_stack((r, rdf.T))
     sq_out = np.column_stack((q, sq.T))
     phi_out = np.column_stack((r, phi))
@@ -62,6 +63,7 @@ def main(input_file):
     np.savetxt(output_path + 'phi_' + test_number + '.dat', phi_out)
     np.savetxt(output_path + 'temp_' + test_number + '.dat', temp_out)
 
+    print(timeit.default_timer() - start)
 
 if __name__ == "__main__":
     input_file = sys.argv[1]

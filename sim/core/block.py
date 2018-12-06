@@ -202,5 +202,3 @@ def fp_block_length(data, conv_output=False):
         return len_block, conv
     else:
         return len_block
-
-#  LocalWords:  Flyvbjerg
