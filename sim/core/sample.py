@@ -20,7 +20,7 @@ def get_bulk(syst, timestep, iterations, dr, order, steps, type_part=[0]):
     start = timeit.default_timer()
     n_part = len(syst.part.select())
 
-    r_size_max = syst.box_l[0] / 2.
+    r_size_max = syst.box_l[0] * 0.5
     bins = np.power(2, (np.floor(np.log2(r_size_max / dr)))).astype(int)
 
     r_min = dr / 2.
@@ -98,80 +98,69 @@ def get_phi(syst, radius, type_a=0, type_b=0):
     return phi
 
 
-def get_reference(syst, iterations, steps, n_part):
-    energy = 0
-    energies = []
+def sample_cavity(syst, dt, iterations, steps, n_part, n_test, dr, bins):
 
-    for i in range(iterations):
-        E_with = syst.analysis.energy()["non_bonded"]
-        p = syst.part[n_part - 1]
-        pid, pos, v, ptype = (p.id, p.pos, p.v, p.type)
-        syst.part[pid].remove()
-        E_without = syst.analysis.energy()["non_bonded"]
-        syst.part.add(id=pid, pos=pos, v=v, type=ptype)
-        energy += np.exp(E_without - E_with)
-        energies.append(energy / (i + 1))
+    syst.time_step = dt
+    cav = np.zeros((iterations, bins))
+    mu = np.zeros(iterations)
+
+    for q in range(iterations):
+        print('sample run {}/{}'.format(q+1, iterations))
+        mu[q], cav[q, :] = get_henderson(syst, n_part, n_test, dr, bins)
         syst.integrator.run(steps)
 
-    print('\n')
-    print(energies[-1])
+    print(mu)
 
-    return energies
+    return cav, mu
 
 
-def get_external(syst, iterations, diffuse, steps, n_part, dr, bins, limit=2.5):
+def get_henderson(syst, n_part, dr, bins):
 
-    # estimates = np.zeros((bins, iterations))
-    # estimates = np.zeros(bins)
-    energies = np.zeros(bins)
-    samples = np.zeros(bins)
-    p = syst.part[n_part - 2]
-    p2 = syst.part[n_part - 1]
+    E_ref = syst.analysis.energy()["non_bonded"]
+    curtemp = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
 
-    for i in range(iterations):
-        print('run '+str(i)+' out of '+str(iterations))
+    mu = 0
+    mu_count = 0
 
-        pid, pos, v, ptype = (p.id, p.pos, p.v, p.type)
-        syst.part[pid].remove()
-        # syst.part.add(id=pid, pos=p2.pos + np.random.random(3)
-        #               * limit, v=v, type=ptype)
-        syst.part.add(id=pid, pos=syst.box_l[0]*np.random.random(3),
-                        v=v, type=ptype)
-        syst.minimize_energy.minimize()
-        syst.integrator.run(steps)
+    syst.part.add(id=n_part + 1, pos=(.5, .5, .5), type=0)
+    for i in range(n_part):
+        syst.part[n_part + 1].pos = np.random.random(3) * syst.box_l
+        E_mu = syst.analysis.energy()["non_bonded"]
+        # mu += np.exp(-(E_mu - E_ref))
+        mu += np.exp(-(E_mu - E_ref) / curtemp)
+        mu_count += 1
+    syst.part[n_part + 1].remove()
 
-        # energies = np.zeros(bins)
-        # samples = np.zeros(bins)
-        failed = 0
+    avg_mu = mu / mu_count
 
-        for j in range(diffuse):
-            r = syst.analysis.min_dist(p1=[1], p2=[2])
-            # print(r)
+    cav = np.zeros(bins)
+    cav_count = np.zeros(bins)
 
-            # print(r)
+    for j in range(n_part):
+        pj = syst.part[j]
+        orig_pos, orig_v = (pj.pos, pj.v)
+        syst.part[j].remove()
+        E_j = syst.analysis.energy()["non_bonded"]
+        syst.part.add(id=j, pos=orig_pos, v=orig_v, type=0)
+        # cav[0] += np.exp(-(E_ref - E_j))
+        cav[0] += np.exp(-(E_ref - E_j) / curtemp)
+        cav_count[0] += 1
 
-            index = np.floor(r / dr - 0.5).astype(int)
+        for k in range(1, bins):
+            syst.part[j].pos = orig_pos + vec_on_sphere() * k * dr
+            E_refj = syst.analysis.energy()["non_bonded"]
+            # cav[k] += np.exp(-(E_refj - E_j))
+            cav[k] += np.exp(-(E_refj - E_j) / curtemp)
+            cav_count[k] += 1
 
-            if index < 0:
-                failed += 1
-            else:
-                E_with = syst.analysis.energy()["non_bonded"]
-                pid, pos, v, ptype = (p.id, p.pos, p.v, p.type)
-                syst.part[pid].remove()
-                E_without = syst.analysis.energy()["non_bonded"]
-                syst.part.add(id=pid, pos=pos, v=v, type=ptype)
-                energies[index] += np.exp(E_without - E_with)
-                samples[index] += 1
+        syst.part[j].pos = orig_pos
 
-            syst.integrator.run(steps)
+    avg_cav = cav / cav_count
 
-        # estimate = np.reshape(energies/samples, (bins,-1))
-        # estimates[:,i] = energies/samples
+    return avg_mu, avg_cav
 
-    # todo estimate the error in our estimate using DDA
 
-    estimates = energies / samples
-
-    print('failed: ', failed)
-
-    return estimates
+def vec_on_sphere():
+    vec = np.random.randn(3)
+    vec /= np.linalg.norm(vec, axis=0)
+    return vec
