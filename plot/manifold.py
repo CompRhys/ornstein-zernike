@@ -5,9 +5,11 @@ import numpy as np
 from mayavi import mlab
 
 def main():
-    path = os.path.expanduser('~')+'/Liquids'
-    outpath = path+'/data/output/'
-    inpath = path+'/data/tested/'
+    # path = os.path.expanduser('~')+'/Liquids'
+    path = os.path.expanduser('~')+'/masters/closure'
+
+    outpath = path+'/data/old/output/'
+    inpath = path+'/data/old/tested/'
     files = os.listdir(outpath)
 
     test_colour = ['darkorange', 'lawngreen', 'teal', 

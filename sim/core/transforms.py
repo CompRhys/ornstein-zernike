@@ -106,7 +106,14 @@ def sq_to_cr(bins, rho, S_k, k, axis=1):
     return c_r, radius
 
 
-def smooth_function(f):
+def smooth_function(f,n):
+    for i in range(n):
+        f = smooth_func(f)
+
+    return f
+
+
+def smooth_func(f):
     """
     five point smoothing as detailed on page 204 of Computer Simulation of Liquids.
     """

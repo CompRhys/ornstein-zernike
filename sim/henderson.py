@@ -11,8 +11,11 @@ import matplotlib.pyplot as plt
 
 def main(input_file, n_part, density, temperature, timestep,
          burn_steps, burn_iterations_max, sampling_steps,
-         sampling_iterations, dr, r_size_max):
+         sampling_iterations, dr, r_size_max, output_path):
     start = timeit.default_timer()
+
+    sampling_iterations = 2
+    sampling_steps = 128
 
     # Setup Espresso Environment
     system = setup.setup_box(input_file, density, n_part)
@@ -23,49 +26,62 @@ def main(input_file, n_part, density, temperature, timestep,
     # Integrate the system to warm up to specified temperature
     initialise.equilibrate_system(system, timestep,
                                   temperature, burn_steps,
+                                  sampling_steps,
                                   burn_iterations_max)
 
-    # hard coded
-    r_size_max = 1.2
-    bins = np.ceil(r_size_max / dr).astype(int)
-    r = np.arange(dr, dr * (bins + 1), dr)
+    bins = np.ceil(r_size_max / dr).astype(int) + 1
+    # r = np.arange(0, dr * (bins), dr)
+    r = np.arange(0, dr * (bins), dr)
 
-    cav, mu = sample.sample_cavity(system, timestep, sampling_iterations, sampling_steps,
-                                   n_part, dr, bins)
+    cav, mu = sample.sample_cavity(system, timestep, sampling_iterations,
+                                   sampling_steps, n_part, r, dr, bins)
 
     print('Mean Chemical Potential {} +/- {}'.format(np.mean(mu), np.std(mu)))
 
-    path = os.path.expanduser('~')
-    output_path = path + '/masters/closure/data/raw/'
+
+    # save the results
     test_number = re.findall('\d+', input_file)[0]
 
-    cav_out = np.column_stack((r, cav.T))
-    np.savetxt('{}cav_d{}_n{}_p{}.dat'
-               .format(output_path, density, n_part, test_number), cav_out)
-    np.savetxt('{}mu_d{}_n{}_p{}.dat'
-               .format(output_path, density, n_part, test_number), mu)
+    # save cavity central potentials
+    f_cav = '{}cav_d{}_n{}_t{}_p{}.dat'.format(output_path, density, n_part, 
+                                                temperature, test_number)
+
+    if os.path.isfile(f_cav):
+        cav_out = cav
+    else:
+        cav_out = np.vstack((r, cav))
+
+    with open(f_cav, 'ab') as f:
+        np.savetxt(f, cav_out)
+
+    # save chemical potential
+    f_mu = '{}mu_d{}_n{}_t{}_p{}.dat'.format(output_path, density, n_part, 
+                                                temperature, test_number)
+
+    with open(f_mu, 'ab') as f:
+        np.savetxt(f, mu)
 
     print(timeit.default_timer() - start)
 
-    display_figures = True 
+    display_figures = True
     if display_figures:
         plot_figures(r, cav, mu)
 
 
 def plot_figures(r, cav, mu):
-    fig, axes = plt.subplots(2,2, figsize=(10,6))
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6))
 
-    axes[0,0] = plt.plot(r, cav.T/mu)    
-    axes[0,1] = plt.plot(r, cav.T/np.mean(mu))    
-    axes[1,0] = plt.hist(mu, 'auto')    
-    axes[1,1] = plt.plot(r, np.mean(cav, axis = 0)/np.mean(mu))
+    axes[0, 0].plot(r, cav.T / mu)
+    axes[0, 1].plot(r, cav.T / np.mean(mu))
+    axes[1, 0].hist(mu, 'auto')
+    axes[1, 1].plot(r, np.mean(cav, axis=0) / np.mean(mu))
 
     fig.tight_layout()
-    plt.show    
+    plt.show()
 
 if __name__ == "__main__":
     opt = parse.parse_input()
 
     main(opt.table, opt.cav_part, opt.rho, opt.temp, opt.dt,
          opt.burn_steps, opt.burn_iter_max, opt.timesteps,
-         opt.cav_iter, opt.dr, opt.r_cav)
+         opt.cav_iter, opt.dr, opt.r_cav, opt.output)

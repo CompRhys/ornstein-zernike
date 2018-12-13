@@ -26,22 +26,9 @@ def get_bulk(syst, timestep, iterations, dr, order, steps, type_part=[0]):
     r_min = dr / 2.
     r_max = dr * bins + r_min
 
-    # def find_full_order(order):
-    #     values = []
-    #     for i in range(order):
-    #         for j in range(order):
-    #             for k in range(order):
-    #                 n = i*i+j*j+k*k
-    #                 if n < order**2:
-    #                     if n not in values:
-    #                         values.append(n)
-
-    #     return len(values)
-
     syst.time_step = timestep
     rdf_data = np.zeros((iterations, bins))
     sq_data = np.zeros((iterations, order))
-    # sq_data = np.zeros((iterations, find_full_order(order)))
     temp = np.zeros(iterations)
     time = np.zeros(iterations)
 
@@ -90,7 +77,8 @@ def get_phi(syst, radius, type_a=0, type_b=0):
         syst.part.add(pos=centre, id=1, type=type_a)
         syst.part.add(pos=centre + (radius[i], 0.0, 0.0), id=2, type=type_b)
         energies = syst.analysis.energy()
-        phi[i] = energies['total'] - energies['kinetic']
+        # phi[i] = energies['total'] - energies['kinetic']
+        phi[i] = energies['non_bonded']
         syst.part.clear()
 
         # syst.part[2].remove()
@@ -98,15 +86,18 @@ def get_phi(syst, radius, type_a=0, type_b=0):
     return phi
 
 
-def sample_cavity(syst, dt, iterations, steps, n_part, n_test, dr, bins):
+def sample_cavity(syst, dt, iterations, steps, n_part, r, dr, bins):
 
     syst.time_step = dt
     cav = np.zeros((iterations, bins))
     mu = np.zeros(iterations)
 
+    n_repeat = np.ceil(10 * r**2).astype(int)
+    print(n_repeat)
+
     for q in range(iterations):
-        print('sample run {}/{}'.format(q+1, iterations))
-        mu[q], cav[q, :] = get_henderson(syst, n_part, n_test, dr, bins)
+        print('sample run {}/{}'.format(q + 1, iterations))
+        mu[q], cav[q, :] = get_henderson(syst, n_part, n_repeat, dr, bins)
         syst.integrator.run(steps)
 
     print(mu)
@@ -114,7 +105,7 @@ def sample_cavity(syst, dt, iterations, steps, n_part, n_test, dr, bins):
     return cav, mu
 
 
-def get_henderson(syst, n_part, dr, bins):
+def get_henderson(syst, n_part, n_repeat, dr, bins):
 
     E_ref = syst.analysis.energy()["non_bonded"]
     curtemp = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
@@ -122,11 +113,11 @@ def get_henderson(syst, n_part, dr, bins):
     mu = 0
     mu_count = 0
 
+    # calculate the chemical potential of the resevoir
     syst.part.add(id=n_part + 1, pos=(.5, .5, .5), type=0)
-    for i in range(n_part):
+    for i in range(n_part * 10):
         syst.part[n_part + 1].pos = np.random.random(3) * syst.box_l
         E_mu = syst.analysis.energy()["non_bonded"]
-        # mu += np.exp(-(E_mu - E_ref))
         mu += np.exp(-(E_mu - E_ref) / curtemp)
         mu_count += 1
     syst.part[n_part + 1].remove()
@@ -136,22 +127,23 @@ def get_henderson(syst, n_part, dr, bins):
     cav = np.zeros(bins)
     cav_count = np.zeros(bins)
 
+    # cannot estimate for zero this way, rewrite code to add one more particle.
+    # this may be causing the discrepancy of results
+
     for j in range(n_part):
-        pj = syst.part[j]
-        orig_pos, orig_v = (pj.pos, pj.v)
-        syst.part[j].remove()
+        orig_pos = syst.part[j].pos
+        syst.part[j].type = 1
         E_j = syst.analysis.energy()["non_bonded"]
-        syst.part.add(id=j, pos=orig_pos, v=orig_v, type=0)
-        # cav[0] += np.exp(-(E_ref - E_j))
+        syst.part[j].type = 0
         cav[0] += np.exp(-(E_ref - E_j) / curtemp)
         cav_count[0] += 1
 
         for k in range(1, bins):
-            syst.part[j].pos = orig_pos + vec_on_sphere() * k * dr
-            E_refj = syst.analysis.energy()["non_bonded"]
-            # cav[k] += np.exp(-(E_refj - E_j))
-            cav[k] += np.exp(-(E_refj - E_j) / curtemp)
-            cav_count[k] += 1
+            for l in range(n_repeat[k]):
+                syst.part[j].pos = orig_pos + vec_on_sphere() * k * dr
+                E_refj = syst.analysis.energy()["non_bonded"]
+                cav[k] += np.exp(-(E_refj - E_j) / curtemp)
+                cav_count[k] += 1
 
         syst.part[j].pos = orig_pos
 

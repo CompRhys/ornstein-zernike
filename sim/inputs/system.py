@@ -28,7 +28,7 @@ def main(inpath):
 
     dt = [0.005]
     dr = [0.02]
-    r_cav = [1.2]
+    r_cav = [1.3]
 
     burn_steps = [1024]
     timesteps = [16]
@@ -36,7 +36,6 @@ def main(inpath):
     burn_iter_max = [16]
     bulk_iter = [1024]    # choose 2**n for fp method
     cav_iter = [10]
-    # mu_iter = [4096]
 
     path = os.path.expanduser('~')
     output = [path + '/masters/closure/data/raw/']

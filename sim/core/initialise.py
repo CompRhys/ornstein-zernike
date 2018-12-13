@@ -30,7 +30,7 @@ def disperse_energy(syst, temp, timestep, n_test=0):
     energy = syst.analysis.energy()
 
     print("Before Minimization: Energy={:.3e}, Min Dist={}"
-          .strip().format(energy['total'], act_min_dist))
+          .strip().format(energy['non_bonded'], act_min_dist))
 
     # Relax structure
     syst.minimize_energy.init(f_max=10.0, gamma=1.0,
@@ -44,14 +44,14 @@ def disperse_energy(syst, temp, timestep, n_test=0):
     energy = syst.analysis.energy()
 
     print("After Minimization: Energy={:.3e}, Min Dist={}"
-          .strip().format(energy['total'], act_min_dist))
+          .strip().format(energy['non_bonded'], act_min_dist))
 
     syst.thermostat.recover()
     # return min_dist
     pass
 
 
-def equilibrate_system(syst, timestep, final_temp, steps, iterations):
+def equilibrate_system(syst, timestep, final_temp, burn, steps, iterations):
     """
     The system is integrated using a small timestep such that the thermostat noise causes
     the system to warm-up. We define the convergence of this equilibration integration
@@ -63,23 +63,25 @@ def equilibrate_system(syst, timestep, final_temp, steps, iterations):
     syst.time_step = timestep
     n_part = len(syst.part.select())
 
-    eq_temp = np.full(3, np.nan)
+    n_test = 5
+
+    eq_temp = np.full(n_test, np.nan)
     avg_temp = 0.
     err_temp = 0.
 
-    # syst.integrator.run(5 * steps)
-
+    syst.integrator.run(burn)
     temp = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
-    print("Initial Temperature = {:.3f}".format(temp))
+    print("Initial Temperature after burn-in period = {:.3f}".format(temp))
+
 
     i = 0
     while np.abs(avg_temp - final_temp) > err_temp and i < iterations:
         syst.integrator.run(steps)
         kine_energy = syst.analysis.energy()['kinetic']
-        eq_temp[i % 3] = kine_energy / (1.5 * n_part)
+        eq_temp[i % n_test] = kine_energy / (1.5 * n_part)
         avg_temp = np.nanmean(eq_temp)
         # can't have ddof = 1
-        err_temp = np.nanstd(eq_temp) / np.sqrt(min(i + 1, 3))
+        err_temp = np.nanstd(eq_temp) / np.sqrt(min(i + 1, n_test))
         if np.abs(avg_temp - final_temp) > err_temp:
             print("Equilibration not converged, Temperature = {:.3f} +/- {:.3f}"
                   .format(avg_temp, err_temp))
