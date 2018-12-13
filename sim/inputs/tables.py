@@ -2,13 +2,12 @@
 Script for generating the input tables for the different potentials used.
 '''
 import os
+import sys
 import numpy as np
 
 
 def main():
-    base_path = os.path.expanduser('~') 
-    working_path = '/masters/closure/data/tables/'
-    output_path = base_path + working_path
+    output_path = sys.argv[1]
 
     r_min = 0.0
     r_max = 2.0
