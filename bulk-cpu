@@ -12,12 +12,12 @@
 #! Name of the job:
 #SBATCH -J cpujob
 #! Which project should be charged:
-#SBATCH -A CHANGEME
+#SBATCH -A LEE-REAG2-SL2-CPU
 #! How many whole nodes should be allocated?
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each.
-#SBATCH --ntasks=64
+#SBATCH --ntasks=1
 #! How much wallclock time will be required?
 #SBATCH --time=02:00:00
 #! What types of email messages do you wish to receive?
