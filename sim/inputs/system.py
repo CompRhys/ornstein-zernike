@@ -38,7 +38,7 @@ def main(inpath):
     cav_iter = [10]
 
     path = os.path.expanduser('~')
-    output = [path + '/masters/closure/data/raw/']
+    output = [path + '/closure/data/raw/']
 
     comb = itertools.product(tables, bulk_part, cav_part, rho, temp, dt, dr, r_cav,
                              burn_steps, timesteps, burn_iter_max, bulk_iter, cav_iter, output)
