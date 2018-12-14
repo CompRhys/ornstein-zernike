@@ -67,10 +67,10 @@ module load miniconda3/4.5.1
 application="pypresso"
 
 #! Pull the inputfile from a text document
-inflags="`awk "NR==$SLURM_ARRAY_TASK_ID" input/input.txt`"
+inflags="`awk "NR==$line" input/input.txt`"
 
 #! Run options for the application:
-options="sim/bulk.py $inflags"
+options="sim/henderson.py $inflags"
 
 #! Work directory (i.e. where the job will run):
 workdir="$SLURM_SUBMIT_DIR"  # The value of SLURM_SUBMIT_DIR sets workdir to the directory

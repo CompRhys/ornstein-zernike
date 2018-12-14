@@ -67,7 +67,7 @@ module load miniconda3/4.5.1
 application="pypresso"
 
 #! Pull the inputfile from a text document
-inflags="`awk "NR==$SLURM_ARRAY_TASK_ID" input/input.txt`"
+inflags="`awk "NR==$line" input/input.txt`"
 
 #! Run options for the application:
 options="sim/bulk.py $inflags"

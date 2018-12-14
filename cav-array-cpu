@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 #! Name of the job:
-#SBATCH -J bulk
+#SBATCH -J cavity
 #! Which project should be charged:
 #SBATCH -A LEE-REAG2-SL2-CPU
 #! How many whole nodes should be allocated?
@@ -70,7 +70,7 @@ application="pypresso"
 inflags="`awk "NR==$SLURM_ARRAY_TASK_ID" input/input.txt`"
 
 #! Run options for the application:
-options="sim/bulk.py $inflags"
+options="sim/henderson.py $inflags"
 
 #! Work directory (i.e. where the job will run):
 workdir="$SLURM_SUBMIT_DIR"  # The value of SLURM_SUBMIT_DIR sets workdir to the directory
