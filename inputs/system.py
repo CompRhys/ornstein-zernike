@@ -35,8 +35,9 @@ def main():
 
     comb = itertools.product(tables, bulk_part, cav_part, rho, temp, dt, dr, r_cav,
                              burn_steps, timesteps, burn_iter_max, bulk_iter, cav_iter, output)
-
-    with open('inputs.txt', 'w') as f:
+    
+    outfilename = sys.argv[3]
+    with open(outfilename, 'w') as f:
         for li in comb:
             f.write(('--table {} --bulk_part {} --cav_part {} --rho {} --temp {} '
                      '--dt {} --dr {} --r_cav {} --burn_steps {} --timesteps {} '
