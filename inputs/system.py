@@ -10,14 +10,8 @@ def file_paths(directory):
             yield os.path.abspath(os.path.join(dirpath, f))
 
 
-def main(inpath):
-
-    # tables = list(file_paths(inpath))
-    # index = [None] * len(tables)
-    # for i in range(len(tables)):
-    #     index[i] = re.findall('\d+', tables[i])[0]
-    # print(index)
-
+def main():
+    inpath = sys.argv[1]
     tables = file_paths(inpath)
 
     bulk_part = [1024]
@@ -36,9 +30,8 @@ def main(inpath):
     burn_iter_max = [16]
     bulk_iter = [1024]    # choose 2**n for fp method
     cav_iter = [10]
-
-    path = os.path.expanduser('~')
-    output = [path + '/masters/closure/data/raw/']
+    
+    output = sys.argv[2]
 
     comb = itertools.product(tables, bulk_part, cav_part, rho, temp, dt, dr, r_cav,
                              burn_steps, timesteps, burn_iter_max, bulk_iter, cav_iter, output)
@@ -50,5 +43,4 @@ def main(inpath):
                      '--burn_iter_max {} --bulk_iter {} --cav_iter {} --output {}\n').format(*li))
 
 if __name__ == '__main__':
-    inpath = sys.argv[1]
-    main(inpath)
+    main()
