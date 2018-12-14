@@ -10,8 +10,7 @@ def file_paths(directory):
             yield os.path.abspath(os.path.join(dirpath, f))
 
 
-def main():
-    inpath = sys.argv[1]
+def main(inpath, output):
     tables = file_paths(inpath)
 
     bulk_part = [1024]
@@ -31,17 +30,18 @@ def main():
     bulk_iter = [1024]    # choose 2**n for fp method
     cav_iter = [10]
     
-    output = sys.argv[2]
-
     comb = itertools.product(tables, bulk_part, cav_part, rho, temp, dt, dr, r_cav,
-                             burn_steps, timesteps, burn_iter_max, bulk_iter, cav_iter, output)
+                             burn_steps, timesteps, burn_iter_max, bulk_iter, cav_iter)
     
-    outfilename = sys.argv[3]
+    outfilename = 'inputs.txt'
     with open(outfilename, 'w') as f:
         for li in comb:
             f.write(('--table {} --bulk_part {} --cav_part {} --rho {} --temp {} '
                      '--dt {} --dr {} --r_cav {} --burn_steps {} --timesteps {} '
-                     '--burn_iter_max {} --bulk_iter {} --cav_iter {} --output {}\n').format(*li))
+                     '--burn_iter_max {} --bulk_iter {} --cav_iter {} --output {}\n').format(*li, output))
 
 if __name__ == '__main__':
-    main()
+    inpath = sys.argv[1]
+    output = sys.argv[2]
+
+    main(inpath, output)
