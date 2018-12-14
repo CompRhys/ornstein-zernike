@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
 
-def main(input_path, input_number, input_bpart, input_cpart, 
-    input_temp, input_density):
+def main(input_path, input_number, input_bpart, input_cpart,
+         input_temp, input_density):
 
     display_figures = True
+    input_path = '/home/rhys/closure/data/raw/'
 
     rdf = np.loadtxt('{}rdf_d{}_n{}_t{}_p{}.dat'.format(
         input_path, input_density, input_bpart, input_temp, input_number))
@@ -29,19 +30,17 @@ def main(input_path, input_number, input_bpart, input_cpart,
     rdf = rdf[1:, :]
     phi = phi[1, :]
 
-
-
     r2 = cav[0, :]
     cav = cav[1:, :]
     cav = transforms.smooth_function(cav, 1)
     dir_cav = np.mean(cav.T / mu, axis=1)
     dirm_cav = np.mean(cav.T / np.mean(mu), axis=1)
-    err_cav = np.std(cav.T / mu, axis=1, ddof=1)/np.sqrt(cav.shape[0])
+    err_cav = np.std(cav.T / mu, axis=1, ddof=1) / np.sqrt(cav.shape[0])
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 6))
 
     axes[0, 0].plot(r2, np.arcsinh(cav.T / mu))
-    axes[0, 1].plot(r2, np.arcsinh(cav.T/ np.mean(mu)))
+    axes[0, 1].plot(r2, np.arcsinh(cav.T / np.mean(mu)))
     axes[1, 0].hist(mu, 'auto')
     axes[1, 1].plot(r2, np.arcsinh(dir_cav))
     axes[1, 1].plot(r2, np.arcsinh(dirm_cav))
@@ -98,7 +97,8 @@ def main(input_path, input_number, input_bpart, input_cpart,
         np.var(sq_switch, axis=0, ddof=1) / sq_switch.shape[0])
 
     # evaluate c(r) from corrected structure factor
-    cr_swtch, r_swtch = transforms.sq_to_cr(r_bins, input_density, sq_switch, q_fft)
+    cr_swtch, r_swtch = transforms.sq_to_cr(
+        r_bins, input_density, sq_switch, q_fft)
     avg_cr_swtch = np.mean(cr_swtch, axis=0)
     err_cr_swtch = np.sqrt(
         np.var(cr_swtch, axis=0, ddof=1) / cr_swtch.shape[0])
@@ -122,7 +122,8 @@ def main(input_path, input_number, input_bpart, input_cpart,
     bulk_cav = np.exp(phi) * avg_rdf
     print(rswitch.shape, dcav_extend.shape, bulk_cav.shape)
 
-    sw_cav = rswitch * dcav_extend[1:] + (1 - rswitch) * np.nan_to_num(bulk_cav)
+    sw_cav = rswitch * dcav_extend[1:] + \
+        (1 - rswitch) * np.nan_to_num(bulk_cav)
 
     bridge = np.log(sw_cav) + avg_cr_swtch - avg_rdf + 1
     bridge2 = np.log(sw_cav) + avg_cr_fft - avg_rdf + 1
@@ -195,63 +196,63 @@ def plot_figure(r, rdf, avg_rdf, err_rdf, avg_cr_fft, err_cr_fft, avg_cr_swtch, 
     # plot y(r)
 
     # llano = np.array([12.78151517,
-                      # 11.94843133,
-                      # 9.93138555,
-                      # 8.424128258,
-                      # 7.049805304,
-                      # 5.629946841,
-                      # 4.747413769,
-                      # 4.067383833,
-                      # 3.484065991,
-                      # 2.946446889,
-                      # 2.619281386,
-                      # 2.280284008,
-                      # 2.028912631,
-                      # 1.843931543,
-                      # 1.568312185,
-                      # 1.486315145,
-                      # 1.3366948,
-                      # 1.255582992,
-                      # 1.184712347,
-                      # 1.075300331,
-                      # 1.030454534,
-                      # 0.966281577,
-                      # 0.942801045,
-                      # 0.89906495,
-                      # 0.864157703,
-                      # 0.843749187,
-                      # 0.817013223,
-                      # 0.811557531,
-                      # 0.794771998,
-                      # 0.791757596,
-                      # 0.788912393,
-                      # 0.800034842,
-                      # 0.801556353,
-                      # 0.802599054,
-                      # 0.821519175,
-                      # 0.85018611,
-                      # 0.868315631,
-                      # 0.889318358,
-                      # 0.940446986,
-                      # 0.9604052,
-                      # 0.989653893,
-                      # 1.000100005,
-                      # 1.017247042,
-                      # 1.023778301,
-                      # 1.025827906,
-                      # 1.023675928,
-                      # 1.016941914,
-                      # 1.020813645,
-                      # 1.010555318,
-                      # 1.004912025])
+    # 11.94843133,
+    # 9.93138555,
+    # 8.424128258,
+    # 7.049805304,
+    # 5.629946841,
+    # 4.747413769,
+    # 4.067383833,
+    # 3.484065991,
+    # 2.946446889,
+    # 2.619281386,
+    # 2.280284008,
+    # 2.028912631,
+    # 1.843931543,
+    # 1.568312185,
+    # 1.486315145,
+    # 1.3366948,
+    # 1.255582992,
+    # 1.184712347,
+    # 1.075300331,
+    # 1.030454534,
+    # 0.966281577,
+    # 0.942801045,
+    # 0.89906495,
+    # 0.864157703,
+    # 0.843749187,
+    # 0.817013223,
+    # 0.811557531,
+    # 0.794771998,
+    # 0.791757596,
+    # 0.788912393,
+    # 0.800034842,
+    # 0.801556353,
+    # 0.802599054,
+    # 0.821519175,
+    # 0.85018611,
+    # 0.868315631,
+    # 0.889318358,
+    # 0.940446986,
+    # 0.9604052,
+    # 0.989653893,
+    # 1.000100005,
+    # 1.017247042,
+    # 1.023778301,
+    # 1.025827906,
+    # 1.023675928,
+    # 1.016941914,
+    # 1.020813645,
+    # 1.010555318,
+    # 1.004912025])
     # rllano = np.arange(0.05, 2.55, 0.05)
     # axes[1, 1].plot(rllano, np.arcsinh(llano), label='$y_{llano}(r)$')
     # axes[1, 1].plot(rllano, llano, label='$y_{sw}(r)$')
 
     axes[1, 1].plot(r, np.arcsinh(bulk_cav), label='$y_{dir}(r)$')
     axes[1, 1].plot(r2, np.arcsinh(dir_cav), label='$y_{cav}(r)$')
-    axes[1, 1].plot(r2, np.arcsinh(dirm_cav), label='$y_{mean}(r)$')
-    # axes[1, 1].plot(r, np.arcsinh(sw_cav), label='$y_{sw}(r)$')
+    # axes[1, 1].plot(r2, np.arcsinh(dirm_cav), label='$y_{mean}(r)$')
+    axes[1, 1].plot(r, np.arcsinh(sw_cav), label='$y_{sw}(r)$')
     # axes[1, 1].plot(r, rswitch, label='W(r)')
     # axes[1, 1].set_ylim([0,5])
     axes[1, 1].set_xlabel('r/$\sigma$')
@@ -261,55 +262,55 @@ def plot_figure(r, rdf, avg_rdf, err_rdf, avg_cr_fft, err_cr_fft, avg_cr_swtch, 
     # plot b(r)
 
     # llano = np.array((-6.8757,
-                      # -6.5826,
-                      # -6.1928,
-                      # -5.7682,
-                      # -5.3394,
-                      # -4.9202,
-                      # -4.5109,
-                      # -4.1127,
-                      # -3.7278,
-                      # -3.3629,
-                      # -2.9926,
-                      # -2.6308,
-                      # -2.292,
-                      # -1.9863,
-                      # -1.6845,
-                      # -1.4042,
-                      # -1.1465,
-                      # -0.8964,
-                      # -0.692,
-                      # -0.5205,
-                      # -0.3708,
-                      # -0.25,
-                      # -0.1581,
-                      # -0.0912,
-                      # -0.0477,
-                      # -0.0242,
-                      # -0.0173,
-                      # -0.0122,
-                      # -0.0154,
-                      # -0.0239,
-                      # -0.0362,
-                      # -0.0405,
-                      # -0.0373,
-                      # -0.0395,
-                      # -0.0251,
-                      # -0.0193,
-                      # -0.0085,
-                      # -0.0011,
-                      # -0.0043,
-                      # -0.0091,
-                      # 0.0196,
-                      # 0.0192,
-                      # 0.0217,
-                      # 0.0211,
-                      # 0.0164,
-                      # 0.0148,
-                      # 0.0144,
-                      # 0.0123,
-                      # -0.0176,
-                      # -0.0223))
+    # -6.5826,
+    # -6.1928,
+    # -5.7682,
+    # -5.3394,
+    # -4.9202,
+    # -4.5109,
+    # -4.1127,
+    # -3.7278,
+    # -3.3629,
+    # -2.9926,
+    # -2.6308,
+    # -2.292,
+    # -1.9863,
+    # -1.6845,
+    # -1.4042,
+    # -1.1465,
+    # -0.8964,
+    # -0.692,
+    # -0.5205,
+    # -0.3708,
+    # -0.25,
+    # -0.1581,
+    # -0.0912,
+    # -0.0477,
+    # -0.0242,
+    # -0.0173,
+    # -0.0122,
+    # -0.0154,
+    # -0.0239,
+    # -0.0362,
+    # -0.0405,
+    # -0.0373,
+    # -0.0395,
+    # -0.0251,
+    # -0.0193,
+    # -0.0085,
+    # -0.0011,
+    # -0.0043,
+    # -0.0091,
+    # 0.0196,
+    # 0.0192,
+    # 0.0217,
+    # 0.0211,
+    # 0.0164,
+    # 0.0148,
+    # 0.0144,
+    # 0.0123,
+    # -0.0176,
+    # -0.0223))
     # llano = np.array((-0.8924,
     #                   -0.8692,
     #                   -0.8132,
@@ -377,11 +378,11 @@ def plot_figure(r, rdf, avg_rdf, err_rdf, avg_cr_fft, err_cr_fft, avg_cr_swtch, 
 if __name__ == "__main__":
     opt = parse.parse_input()
     input_path = opt.output
-    input_number = re.findall('\d+', opt.table)[0]
+    input_number = re.findall('\d+', opt.table)[-1]
     input_bpart = opt.bulk_part
     input_cpart = opt.cav_part
     input_density = opt.rho
     input_temp = opt.temp
 
-    main(input_path, input_number, input_bpart, input_cpart, 
-        input_temp, input_density)
+    main(input_path, input_number, input_bpart, input_cpart,
+         input_temp, input_density)

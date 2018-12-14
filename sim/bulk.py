@@ -40,7 +40,8 @@ def main(input_file, n_part, density, temperature, timestep,
     phi = sample.get_phi(system, r)
 
     # save the results
-    test_number = re.findall('\d+', input_file)[0]
+    test_number = re.findall('\d+', input_file)[-1]
+    print(test_number)
 
     # save rdf
     f_rdf = '{}rdf_d{}_n{}_t{}_p{}.dat'.format(

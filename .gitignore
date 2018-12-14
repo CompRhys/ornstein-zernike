@@ -112,3 +112,6 @@ dmypy.json
 
 # exclude data folders
 /data
+
+# exclude inputsfile
+*inputs.txt
