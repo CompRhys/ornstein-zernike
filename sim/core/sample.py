@@ -87,6 +87,15 @@ def get_phi(syst, radius, type_a=0, type_b=0):
 
 
 def sample_cavity(syst, dt, iterations, steps, n_part, r, dr, bins):
+    """
+    repeat the cavity sampling for a given number of iterations
+
+    returns:
+        cav = (cav) array(iterations,bins)
+        mu = (mu) array(iterations)
+    """
+
+    start = timeit.default_timer()
 
     syst.time_step = dt
     cav = np.zeros((iterations, bins))
@@ -96,7 +105,9 @@ def sample_cavity(syst, dt, iterations, steps, n_part, r, dr, bins):
     print(n_repeat)
 
     for q in range(iterations):
-        print('sample run {}/{}'.format(q + 1, iterations))
+        now = timeit.default_timer()
+        print('sample run {}/{} (real time = {:.1f})'.format(
+            q + 1, iterations, now-start))
         mu[q], cav[q, :] = get_henderson(syst, n_part, n_repeat, dr, bins)
         syst.integrator.run(steps)
 

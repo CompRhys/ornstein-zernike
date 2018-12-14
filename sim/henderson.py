@@ -6,12 +6,18 @@ import espressomd
 import timeit
 import numpy as np
 from core import setup, initialise, sample, parse
-import matplotlib.pyplot as plt
 
 
 def main(input_file, n_part, density, temperature, timestep,
          burn_steps, burn_iterations_max, sampling_steps,
          sampling_iterations, dr, r_size_max, output_path):
+    """
+    Evaluate the chemical potential and the cavity function
+
+    returns:
+        cav_out = (r,cav) array(iterations+1,bins)
+        mu = (mu) array(iterations)
+    """
     start = timeit.default_timer()
 
     sampling_iterations = 2
@@ -36,15 +42,12 @@ def main(input_file, n_part, density, temperature, timestep,
     cav, mu = sample.sample_cavity(system, timestep, sampling_iterations,
                                    sampling_steps, n_part, r, dr, bins)
 
-    print('Mean Chemical Potential {} +/- {}'.format(np.mean(mu), np.std(mu)))
-
-
     # save the results
     test_number = re.findall('\d+', input_file)[0]
 
     # save cavity central potentials
-    f_cav = '{}cav_d{}_n{}_t{}_p{}.dat'.format(output_path, density, n_part, 
-                                                temperature, test_number)
+    f_cav = '{}cav_d{}_n{}_t{}_p{}.dat'.format(output_path, density, n_part,
+                                               temperature, test_number)
 
     if os.path.isfile(f_cav):
         cav_out = cav
@@ -55,29 +58,14 @@ def main(input_file, n_part, density, temperature, timestep,
         np.savetxt(f, cav_out)
 
     # save chemical potential
-    f_mu = '{}mu_d{}_n{}_t{}_p{}.dat'.format(output_path, density, n_part, 
-                                                temperature, test_number)
+    f_mu = '{}mu_d{}_n{}_t{}_p{}.dat'.format(output_path, density, n_part,
+                                             temperature, test_number)
 
     with open(f_mu, 'ab') as f:
         np.savetxt(f, mu)
 
     print(timeit.default_timer() - start)
 
-    display_figures = True
-    if display_figures:
-        plot_figures(r, cav, mu)
-
-
-def plot_figures(r, cav, mu):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 6))
-
-    axes[0, 0].plot(r, cav.T / mu)
-    axes[0, 1].plot(r, cav.T / np.mean(mu))
-    axes[1, 0].hist(mu, 'auto')
-    axes[1, 1].plot(r, np.mean(cav, axis=0) / np.mean(mu))
-
-    fig.tight_layout()
-    plt.show()
 
 if __name__ == "__main__":
     opt = parse.parse_input()
