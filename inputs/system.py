@@ -13,32 +13,38 @@ def file_paths(directory):
 def main(inpath, output):
     tables = file_paths(inpath)
 
-    bulk_part = [1024]
-    cav_part = [512]
-
     rho = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     temp = [1.]
 
     dt = [0.005]
     dr = [0.02]
-    r_cav = [1.3]
+
+    bulk_part = [1024]
+    bulk_steps = [16]
+    bulk_iter = [1024]
+
+    cav_part = [512]
+    cav_steps = [128]
+    cav_iter = [2]
+    cav_radius = [1.1]
+    mu_repeats = [15000]
 
     burn_steps = [1024]
-    timesteps = [16]
-
     burn_iter_max = [16]
-    bulk_iter = [1024]    # choose 2**n for fp method
-    cav_iter = [10]
-    
-    comb = itertools.product(tables, bulk_part, cav_part, rho, temp, dt, dr, r_cav,
-                             burn_steps, timesteps, burn_iter_max, bulk_iter, cav_iter)
-    
+
+    comb = itertools.product(tables, rho, temp, dt, dr,
+                             bulk_part, bulk_steps, bulk_iter,
+                             cav_part, cav_steps, cav_iter, cav_radius, 
+                             mu_repeats, burn_steps, burn_iter_max)
+
     outfilename = 'inputs.txt'
     with open(outfilename, 'w') as f:
         for li in comb:
-            f.write(('--table {} --bulk_part {} --cav_part {} --rho {} --temp {} '
-                     '--dt {} --dr {} --r_cav {} --burn_steps {} --timesteps {} '
-                     '--burn_iter_max {} --bulk_iter {} --cav_iter {} --output {}\n').format(*li, output))
+            f.write(('--table {} --rho {} --temp {} --dt {} --dr {} '
+                     '--bulk_part {} --bulk_steps {} --bulk_iter {} '
+                     '--cav_part {} --cav_steps {} --cav_iter {} --cav_radius {} '
+                     '--mu_repeats {} --burn_steps {} --burn_iter_max {} '
+                     '--output {}\n').format(*li, output))
 
 if __name__ == '__main__':
     inpath = sys.argv[1]

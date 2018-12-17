@@ -8,9 +8,9 @@ import numpy as np
 from core import setup, initialise, sample, parse
 
 
-def main(input_file, n_part, density, temperature, timestep,
-         burn_steps, burn_iterations_max, sampling_steps,
-         sampling_iterations, dr, r_size_max, output_path):
+def main(input_file, density, temperature, dr, dt,
+         burn_steps, burn_iterations_max, n_part, sampling_steps,
+         sampling_iterations, r_size_max, mu_repeats, output_path):
     """
     Evaluate the chemical potential and the cavity function
 
@@ -27,20 +27,20 @@ def main(input_file, n_part, density, temperature, timestep,
     system = setup.setup_box(input_file, density, n_part)
 
     # Disperse Particles to energy minimum
-    initialise.disperse_energy(system, temperature, timestep)
+    initialise.disperse_energy(system, temperature, dt)
 
     # Integrate the system to warm up to specified temperature
-    initialise.equilibrate_system(system, timestep,
+    initialise.equilibrate_system(system, dt,
                                   temperature, burn_steps,
-                                  sampling_steps,
                                   burn_iterations_max)
 
     bins = np.ceil(r_size_max / dr).astype(int) + 1
     # r = np.arange(0, dr * (bins), dr)
-    r = np.arange(0, dr * (bins), dr)
+    r = (np.arange(bins) + 1) * dr
 
-    cav, mu = sample.sample_cavity(system, timestep, sampling_iterations,
-                                   sampling_steps, n_part, r, dr, bins)
+    cav, mu = sample.sample_henderson(system, dt, sampling_iterations,
+                                      sampling_steps, n_part, mu_repeats,
+                                      r, dr, bins)
 
     # save the results
     test_number = re.findall('\d+', input_file)[-1]
@@ -71,6 +71,16 @@ def main(input_file, n_part, density, temperature, timestep,
 if __name__ == "__main__":
     opt = parse.parse_input()
 
-    main(opt.table, opt.cav_part, opt.rho, opt.temp, opt.dt,
-         opt.burn_steps, opt.burn_iter_max, opt.timesteps,
-         opt.cav_iter, opt.dr, opt.r_cav, opt.output)
+    main(opt.table,
+         opt.rho,
+         opt.temp,
+         opt.dr,
+         opt.dt,
+         opt.burn_steps,
+         opt.burn_iter_max,
+         opt.cav_part,
+         opt.cav_steps,
+         opt.cav_iter,
+         opt.cav_radius,
+         opt.mu_repeats,
+         opt.output)

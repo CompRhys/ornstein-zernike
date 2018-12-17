@@ -27,10 +27,10 @@ def disperse_energy(syst, temp, timestep, n_test=0):
         act_min_dist[j] = syst.analysis.min_dist(
             p1=[comb[j][0]], p2=[comb[j][1]])
 
-    energy = syst.analysis.energy()
+    energy = syst.analysis.energy()['non_bonded']
 
     print("Before Minimization: Energy={:.3e}, Min Dist={}"
-          .strip().format(energy['non_bonded'], act_min_dist))
+          .strip().format(energy, act_min_dist))
 
     # Relax structure
     syst.minimize_energy.init(f_max=10.0, gamma=1.0,
@@ -41,22 +41,22 @@ def disperse_energy(syst, temp, timestep, n_test=0):
         act_min_dist[j] = syst.analysis.min_dist(
             p1=[comb[j][0]], p2=[comb[j][1]])
 
-    energy = syst.analysis.energy()
+    energy = syst.analysis.energy()['non_bonded']
 
     print("After Minimization: Energy={:.3e}, Min Dist={}"
-          .strip().format(energy['non_bonded'], act_min_dist))
+          .strip().format(energy, act_min_dist))
 
     syst.thermostat.recover()
     # return min_dist
     pass
 
 
-def equilibrate_system(syst, timestep, final_temp, burn, steps, iterations):
+def equilibrate_system(syst, timestep, final_temp, burn, iterations):
     """
-    The system is integrated using a small timestep such that the thermostat noise causes
-    the system to warm-up. We define the convergence of this equilibration integration
-    as the point at which the mean and standard deviation of the last three samples overlaps
-    the target temperature.
+    The system is integrated using a small timestep such that the thermostat 
+    noise causes the system to warm-up. We define the convergence of this 
+    equilibration integration as the point at which the mean and standard 
+    deviation of the last three samples overlaps the target temperature.
     """
     print("\nEquilibration\n")
 
@@ -76,7 +76,7 @@ def equilibrate_system(syst, timestep, final_temp, burn, steps, iterations):
 
     i = 0
     while np.abs(avg_temp - final_temp) > err_temp and i < iterations:
-        syst.integrator.run(steps)
+        syst.integrator.run(burn)
         kine_energy = syst.analysis.energy()['kinetic']
         eq_temp[i % n_test] = kine_energy / (1.5 * n_part)
         avg_temp = np.nanmean(eq_temp)

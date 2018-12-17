@@ -378,9 +378,9 @@ def llano(path):
 
 def make_output(phi, r):
     force = np.gradient(phi, r[1])
-    phi = phi + force[-1] * r[-1]
+    # phi = phi + force[-1] * r[-1]
     phi = phi - phi[-1]  # shift phi
-    force = force - force[-1]
+    # force = force - force[-1]
 
     output = np.vstack((r, phi, force))
 

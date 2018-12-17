@@ -8,23 +8,20 @@ import numpy as np
 from core import setup, initialise, sample, parse
 
 
-def main(input_file, n_part, density, temperature, timestep, 
-        burn_steps, burn_iterations_max, sampling_steps,
-        sampling_iterations, dr, output_path):
+def main(input_file, density, temperature, dr, dt, 
+        burn_steps, burn_iterations_max, n_part, sampling_steps,
+        sampling_iterations,  output_path):
     start = timeit.default_timer()
 
-
-    # sampling_iterations = 8192
     # Setup Espresso Environment
     system = setup.setup_box(input_file, density, n_part)
 
     # Disperse Particles to energy minimum
-    initialise.disperse_energy(system, temperature, timestep)
+    initialise.disperse_energy(system, temperature, dt)
 
     # Integrate the system to warm up to specified temperature
-    initialise.equilibrate_system(system, timestep,
+    initialise.equilibrate_system(system, dt,
                                   temperature, burn_steps,
-                                  sampling_steps,
                                   burn_iterations_max)
 
     # order of 8 / (2*pi / L) means we take s(q) up to q = 8 i.e. past
@@ -32,16 +29,15 @@ def main(input_file, n_part, density, temperature, timestep,
     sq_order = np.ceil(4 * system.box_l[0] / np.pi).astype(int)
 
     # Sample the RDF for the system
-    rdf, r, sq, q, temp, t = sample.get_bulk(system, timestep,
-                                                     sampling_iterations, dr,
-                                                     sq_order, sampling_steps)
+    rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
+                                             sampling_iterations, dr,
+                                             sq_order, sampling_steps)
 
     # Extract the interaction potential used by the model
     phi = sample.get_phi(system, r)
 
     # save the results
     test_number = re.findall('\d+', input_file)[-1]
-    print(test_number)
 
     # save rdf
     f_rdf = '{}rdf_d{}_n{}_t{}_p{}.dat'.format(
@@ -98,6 +94,14 @@ def main(input_file, n_part, density, temperature, timestep,
 if __name__ == "__main__":
     opt = parse.parse_input()
 
-    main(opt.table, opt.bulk_part, opt.rho, opt.temp, opt.dt, 
-        opt.burn_steps, opt.burn_iter_max, opt.timesteps,
-        opt.bulk_iter, opt.dr, opt.output)
+    main(opt.table, 
+        opt.rho, 
+        opt.temp, 
+        opt.dr, 
+        opt.dt, 
+        opt.burn_steps, 
+        opt.burn_iter_max, 
+        opt.bulk_part, 
+        opt.bulk_steps,
+        opt.bulk_iter, 
+        opt.output)

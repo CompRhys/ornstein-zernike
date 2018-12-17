@@ -44,10 +44,9 @@ def hr_to_cr(bins, rho, data, radius, error=None, axis=1):
         return c_r
 
 
-def hr_to_sq(bins, rho, data, radius, dk, axis=1):
+def hr_to_sq(bins, rho, data, radius, axis=1):
     """
     this function takes h(r) and takes the fourier transform to find s(k)
-    # dk is given by the size of the simulation box
     """
     # setup scales
 
@@ -67,7 +66,8 @@ def hr_to_sq(bins, rho, data, radius, dk, axis=1):
 
 def sq_to_hr(bins, rho, S_k, k, axis=1):
     """
-    Takes the structure factor s(q) and computes the real space total correlation function h(r)
+    Takes the structure factor s(q) and computes the real space 
+    total correlation function h(r)
     """
     # setup scales
 
@@ -87,7 +87,8 @@ def sq_to_hr(bins, rho, S_k, k, axis=1):
 
 def sq_to_cr(bins, rho, S_k, k, axis=1):
     """
-    Takes the structure factor s(q) and computes the direct correlation function in real space c(r)
+    Takes the structure factor s(q) and computes the direct correlation 
+    function in real space c(r)
     """
     # setup scales
 
@@ -109,7 +110,6 @@ def sq_to_cr(bins, rho, S_k, k, axis=1):
 def smooth_function(f,n):
     for i in range(n):
         f = smooth_func(f)
-
     return f
 
 
