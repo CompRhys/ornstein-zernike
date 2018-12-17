@@ -19,22 +19,22 @@ def main(inpath, output):
     dt = [0.005]
     dr = [0.02]
 
-    bulk_part = [1024]
+    bulk_part = [8192]
     bulk_steps = [16]
     bulk_iter = [1024]
 
     cav_part = [512]
     cav_steps = [128]
-    cav_iter = [2]
-    cav_radius = [1.1]
-    mu_repeats = [15000]
+    cav_iter = [20]
+    cav_radius = [1.2]
+    mu_repeats = [25000]
 
     burn_steps = [1024]
     burn_iter_max = [16]
 
     comb = itertools.product(tables, rho, temp, dt, dr,
                              bulk_part, bulk_steps, bulk_iter,
-                             cav_part, cav_steps, cav_iter, cav_radius, 
+                             cav_part, cav_steps, cav_iter, cav_radius,
                              mu_repeats, burn_steps, burn_iter_max)
 
     outfilename = 'inputs.txt'
