@@ -20,9 +20,6 @@ def main(input_file, density, temperature, dr, dt,
     """
     start = timeit.default_timer()
 
-    sampling_iterations = 2
-    sampling_steps = 128
-
     # Setup Espresso Environment
     system = setup.setup_box(input_file, density, n_part)
 
