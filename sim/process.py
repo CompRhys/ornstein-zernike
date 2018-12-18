@@ -14,7 +14,7 @@ class processing:
         self.block_size = 128
 
         self.rho = []
-        self.r_bins = [] 
+        self.r_bins = []
         self.r = []
         self.r_ = []
 
@@ -62,14 +62,15 @@ class processing:
         avg_rdf = np.mean(blocked, axis=0)
         err_rdf = np.sqrt(np.var(blocked, axis=0, ddof=1) / blocked.shape[0])
 
-        return avg_rdf, err_rdf
+        return avg_rdf - 1, err_rdf
 
     def dcf(self):
 
         blocked = block.block_data(self.raw_rdf, self.block_size)
 
         # Structure Factor via Fourier Transform
-        sq_fft, q_fft = transforms.hr_to_sq(self.r_bins, self.rho, blocked - 1., self.r)
+        sq_fft, q_fft = transforms.hr_to_sq(
+            self.r_bins, self.rho, blocked - 1., self.r)
         self.q = q_fft
 
         # Correction of low q limit via direct measurement (Frankenstien's)
@@ -79,7 +80,8 @@ class processing:
         sq_dir = spline(q_dir)
 
         block_sq = block.block_data(sq_dir, self.block_size)
-        sq_extend = np.pad(block_sq, ((0, 0), (0, len(q_fft) - len(q_dir))), 'constant')
+        sq_extend = np.pad(
+            block_sq, ((0, 0), (0, len(q_fft) - len(q_dir))), 'constant')
 
         ind = 7
         switch = (1 + np.cos(np.pi * q_dir[:ind] / q_dir[ind])) * .5
@@ -109,59 +111,75 @@ class processing:
         avg_f_dcf = np.mean(f_dcf, axis=0)
         err_f_dcf = np.sqrt(np.var(f_dcf, axis=0, ddof=1) / f_dcf.shape[0])
 
-        return avg_dcf, err_dcf
-
+        return avg_dcf, err_dcf, avg_sq_sw, err_sq_sw
 
     def ccf(self):
         cav = np.mean(self.raw_cav.T / self.mu, axis=1)
-        err_cav = np.sqrt(np.var(self.raw_cav.T, axis=0, ddof=1) / self.raw_cav.T.shape[0])
+        err_cav = np.sqrt(np.var(self.raw_cav.T, axis=0,
+                                 ddof=1) / self.raw_cav.T.shape[0])
 
         # todo: look at this in detail to ensure we are matching correctly
-        dcav_extend = np.pad(cav, (0, len(self.r) - len(self.r_) + 1), 'constant')
+        dcav_extend = np.pad(cav, (0, len(self.r) - len(self.r_)), 'constant')
         rs_start = 1.0
         rs_end = self.r_[-1]
         rs = np.arange(0, rs_end - rs_start, self.r[0])
-        before = int(rs_start / self.r[0])
-        after = int((self.r[-1] - rs_end) / self.r[0])
+        before = np.floor(rs_start / self.r[0]).astype(int)
+        after = np.ceil((self.r[-1] - rs_end) / self.r[0]).astype(int)
         switch = (1 + np.cos(np.pi * rs / rs[-1])) * .5
         switch = np.pad(switch, (before, 0), 'constant', constant_values=(1))
         switch = np.pad(switch, (0, after), 'constant', constant_values=(0))
-        bulk_cav = np.exp(self.phi) * np.mean(self.raw_rdf, axis = 0)
+        bulk_cav = np.exp(self.phi) * np.mean(self.raw_rdf, axis=0)
 
-        avg_ccf = switch * dcav_extend[1:] + (1 - switch) * np.nan_to_num(bulk_cav)
+        avg_ccf = switch * dcav_extend + (1 - switch) * np.nan_to_num(bulk_cav)
         err_ccf = 0
-        
+
         return avg_ccf, err_ccf
 
 
-def main(path, number, bpart, cpart, temp, rho):
+def process_set(path, number, bpart, cpart, temp, rho, directory):
     data = processing()
-    data.load_data(path, number, bpart, cpart, temp, rho)
+    try:
+        data.load_data(path, number, bpart, cpart, temp, rho)
+    except:
+        return
 
-    avg_rdf, err_rdf = data.rdf()
-    avg_dcf, err_dcf = data.dcf()
+    avg_tcf, err_tcf = data.rdf()
+    avg_dcf, err_dcf, avg_sq, err_sq = data.dcf()
     avg_ccf, err_ccf = data.ccf()
     r = data.r
+    q = data.q
 
-    bridge = np.log(avg_ccf) + avg_dcf - avg_rdf + 1
+    bridge = np.log(avg_ccf) + avg_dcf - avg_tcf
 
-    grad_rdf = np.gradient(avg_rdf, r[0])
+    grad_tcf = np.gradient(avg_tcf, r[0])
     grad_dcf = np.gradient(avg_dcf, r[0])
 
+    output = np.column_stack((r, bridge,
+                              avg_tcf, avg_dcf,
+                              grad_tcf, grad_dcf,
+                              err_dcf, err_tcf,
+                              q, avg_sq))
 
-
-
-
+    np.savetxt('{}processed_d{}_t{}_p{}.dat'.format(
+        directory, rho, temp, number), output)
 
 
 if __name__ == "__main__":
-    opt = parse.parse_input()
-    input_path = opt.output
-    input_number = re.findall('\d+', opt.table)[-1]
-    input_bpart = opt.bulk_part
-    input_cpart = opt.cav_part
-    input_density = opt.rho
-    input_temp = opt.temp
+    filename = sys.argv[1]
+    input_path = sys.argv[2]
+    output_path = sys.argv[3]
 
-    main(input_path, input_number, input_bpart, input_cpart,
-         input_temp, input_density)
+    with open(filename) as f:
+        lines = f.read().splitlines()
+
+    for line in lines:
+        opt = parse.parse_str(line)
+        # input_path = opt.output
+        input_number = re.findall('\d+', opt.table)[-1]
+        input_bpart = opt.bulk_part
+        input_cpart = opt.cav_part
+        input_density = opt.rho
+        input_temp = opt.temp
+
+        process_set(input_path, input_number, input_bpart, input_cpart,
+                    input_temp, input_density, output_path)

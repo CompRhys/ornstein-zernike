@@ -13,13 +13,14 @@ train_path = path+'/train.dat'
 training_set    = np.loadtxt(train_path)
 train_size      = len(training_set)
 
-X_train = training_set[:train_size, 1:6]
+X_train = training_set[:train_size, 1:5]
 y_train = training_set[:train_size, 0]
 
 model = Sequential()
-model.add(Dense(12, input_dim=5, kernel_initializer='normal', activation='relu'))
-model.add(Dense(8, activation='relu'))
-model.add(Dense(4, activation='relu'))
+model.add(Dense(12, input_dim=4, kernel_initializer='normal', activation='relu'))
+model.add(Dense(16, activation='relu'))
+model.add(Dense(16, activation='relu'))
+model.add(Dense(16, activation='relu'))
 model.add(Dense(1, activation='linear'))
 model.summary()
 
@@ -58,7 +59,7 @@ test_set    = np.loadtxt(test_path)
 test_size   = len(test_set)
 # test_size   = 10000
 
-X_test      = test_set [:test_size,1:6]
+X_test      = test_set [:test_size,1:5]
 bridge      = test_set [:test_size,0]
 
 Y_predicted = model.predict(X_test)

@@ -9,11 +9,10 @@ def file_paths(directory):
         for f in filenames:
             yield os.path.abspath(os.path.join(dirpath, f))
 
-
 def main(inpath, output):
     tables = file_paths(inpath)
 
-    rho = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    rho = [0.4, 0.5, 0.6, 0.7, 0.8]
     temp = [1.]
 
     dt = [0.005]
@@ -25,11 +24,11 @@ def main(inpath, output):
 
     cav_part = [512]
     cav_steps = [128]
-    cav_iter = [20]
+    cav_iter = [100]
     cav_radius = [1.2]
     mu_repeats = [25000]
 
-    burn_steps = [1024]
+    burn_steps = [2048]
     burn_iter_max = [16]
 
     comb = itertools.product(tables, rho, temp, dt, dr,

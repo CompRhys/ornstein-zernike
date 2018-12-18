@@ -21,7 +21,7 @@ def main():
     # repulsive
     soft(output_path, rad)
     yukawa(output_path, rad)
-    wca(output_path)
+    wca(output_path, rad)
 
     # double minima
     dlvo(output_path, rad)
@@ -33,11 +33,11 @@ def main():
     rssaw(output_path, rad)
 
     # soft potentials
-    gaussian(output_path, rad)
-    hat(output_path)
-    hertzian(output_path)
+    # gaussian(output_path, rad)
+    # hat(output_path)
+    # hertzian(output_path)
 
-    llano(output_path)
+    # llano(output_path)
 
     pass
 
@@ -124,32 +124,33 @@ def yukawa(path, r):
 
             test_number += 1
 
-def wca(path):
+def wca(path, r):
     ptype = 'wca'
     energy = [1.0, 0.6]
-    powers = [[50, 49], [35, 22], [20, 14], [12, 6]]
+    powers = [[50, 49], [12, 6]]
 
     test_number = 0
     r_min = 0.0
-    samples = 4096
+    potential = np.zeros_like(r)
 
     for i in np.arange(len(powers)):
 
         alpha = powers[i][0]
         beta = powers[i][1]
         r_max = np.power(alpha / beta, 1 / (alpha - beta))
-        r = np.linspace(r_min, r_max, samples)
-        rs = np.zeros_like(r)
-        rh = np.zeros_like(r)
-        rs[1:] = np.power(1. / r[1:], beta)
+        rwca = np.arange(r_min, r_max, r[1])
+        rs = np.zeros_like(rwca)
+        rh = np.zeros_like(rwca)
+        rs[1:] = np.power(1. / rwca[1:], beta)
         rs[0] = 2 * rs[1] - rs[2]
-        rh[1:] = rs[1:] * np.power(1 / r[1:], alpha - beta)
+        rh[1:] = rs[1:] * np.power(1 / rwca[1:], alpha - beta)
         rh[0] = 2 * rh[1] - rh[2]
         prefactor = alpha * np.power(alpha / beta, beta)
 
         for p2 in energy:
 
-            potential = prefactor * p2 * (rh - rs) + p2
+            potential[:len(rs)] = prefactor * p2 * (rh - rs)
+            potential[:len(rs)] -= potential[len(rs)-1]
 
             save_table(path, ptype, test_number, r, potential)
 
