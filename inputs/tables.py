@@ -15,29 +15,29 @@ def main():
     rad = np.linspace(r_min, r_max, samples)
 
     # single minima
-    lj(output_path, rad)
-    morse(output_path, rad)
+    # lj(output_path, rad)
+    # morse(output_path, rad)
 
     # repulsive
-    soft(output_path, rad)
-    yukawa(output_path, rad)
-    wca(output_path, rad)
+    # soft(output_path, rad)
+    # yukawa(output_path, rad)
+    # wca(output_path, rad)
 
     # double minima
-    dlvo(output_path, rad)
-    exp_well(output_path, rad)
+    # dlvo(output_path, rad)
+    # exp_well(output_path, rad)
 
     # step potenstials
-    step(output_path, rad)
-    csw(output_path, rad)
-    rssaw(output_path, rad)
+    # step(output_path, rad)
+    # csw(output_path, rad)
+    # rssaw(output_path, rad)
 
     # soft potentials
     # gaussian(output_path, rad)
     # hat(output_path)
     # hertzian(output_path)
 
-    # llano(output_path)
+    llano(output_path)
 
     pass
 
@@ -109,7 +109,7 @@ def yukawa(path, r):
     ptype = 'yukawa'
     alpha = [2., 4., 6.]
     kappa = [2.5, 3.5]
-    delta = 0.0
+    delta = 0.8
 
     test_number = 0
     potential = np.zeros_like(r)

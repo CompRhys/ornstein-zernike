@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 class processing:
 
     def __init__(self):
-        self.block_size = 128
+        self.block_size = 256
 
         self.rho = []
         self.r_bins = []
@@ -41,8 +41,12 @@ class processing:
             path, density, cpart, temp, number))
         mu = np.loadtxt('{}mu_d{}_n{}_t{}_p{}.dat'.format(
             path, density, cpart, temp, number))
+        temp = np.loadtxt('{}temp_d{}_n{}_t{}_p{}.dat'.format(
+            path, density, bpart, temp, number))
 
         # extract the data
+        self.raw_T = temp[:, 1]
+
         self.rho = density
         self.r_bins = len(rdf[0, :])
         self.r = rdf[0, :]
@@ -55,6 +59,18 @@ class processing:
 
         self.q_ = sq[0, :]
         self.raw_sq = sq[1:, :]
+
+    def equilibrium(self, target):
+
+        blocked = block.block_data(self.raw_T.reshape((-1,1)), self.block_size)
+        err = np.std(blocked)
+        res = np.abs(np.mean(blocked - target))
+
+        if res < err:
+            return True
+        else:
+            print('bye bye sample')
+            return False
 
     def rdf(self):
 
@@ -114,9 +130,8 @@ class processing:
         return avg_dcf, err_dcf, avg_sq_sw, err_sq_sw
 
     def ccf(self):
-        cav = np.mean(self.raw_cav.T / self.mu, axis=1)
-        err_cav = np.sqrt(np.var(self.raw_cav.T, axis=0,
-                                 ddof=1) / self.raw_cav.T.shape[0])
+        cav = np.mean(self.raw_cav, axis=0) / np.mean(self.mu)
+        # todo : error analysis within the cavity
 
         # todo: look at this in detail to ensure we are matching correctly
         dcav_extend = np.pad(cav, (0, len(self.r) - len(self.r_)), 'constant')
@@ -129,7 +144,6 @@ class processing:
         switch = np.pad(switch, (before, 0), 'constant', constant_values=(1))
         switch = np.pad(switch, (0, after), 'constant', constant_values=(0))
         bulk_cav = np.exp(self.phi) * np.mean(self.raw_rdf, axis=0)
-
         avg_ccf = switch * dcav_extend + (1 - switch) * np.nan_to_num(bulk_cav)
         err_ccf = 0
 
@@ -143,25 +157,30 @@ def process_set(path, number, bpart, cpart, temp, rho, directory):
     except:
         return
 
-    avg_tcf, err_tcf = data.rdf()
-    avg_dcf, err_dcf, avg_sq, err_sq = data.dcf()
-    avg_ccf, err_ccf = data.ccf()
-    r = data.r
-    q = data.q
+    if data.equilibrium(temp):
+        avg_tcf, err_tcf = data.rdf()
+        avg_dcf, err_dcf, avg_sq, err_sq = data.dcf()
+        avg_ccf, err_ccf = data.ccf()
+        r = data.r
+        q = data.q
+        phi = data.phi
 
-    bridge = np.log(avg_ccf) + avg_dcf - avg_tcf
+        bridge = np.log(avg_ccf) + avg_dcf - avg_tcf
 
-    grad_tcf = np.gradient(avg_tcf, r[0])
-    grad_dcf = np.gradient(avg_dcf, r[0])
+        grad_tcf = np.gradient(avg_tcf, r[0])
+        grad_dcf = np.gradient(avg_dcf, r[0])
 
-    output = np.column_stack((r, bridge,
-                              avg_tcf, avg_dcf,
-                              grad_tcf, grad_dcf,
-                              err_dcf, err_tcf,
-                              q, avg_sq))
+        output = np.column_stack((r, bridge, phi,
+                                  avg_tcf, avg_dcf,
+                                  grad_tcf, grad_dcf,
+                                  err_dcf, err_tcf,
+                                  q, avg_sq))
 
-    np.savetxt('{}processed_d{}_t{}_p{}.dat'.format(
-        directory, rho, temp, number), output)
+        np.savetxt('{}processed_d{}_t{}_p{}.dat'.format(
+            directory, rho, temp, number), output)
+
+    else:
+        return
 
 
 if __name__ == "__main__":

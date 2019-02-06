@@ -14,7 +14,7 @@ matplotlib.rcParams.update({'font.size': 16})
 # c_r - real space direct correlation function
 # C_k - k-space direct correlation function
 
-# read data 
+# read data
 path = os.path.expanduser('~')+'/Liquids'
 test_number = str(22001)
 output_fp = np.loadtxt(path+'/llano/output/output_'+test_number+'.dat')
@@ -80,7 +80,7 @@ axes.plot(rllano, llano, linestyle="None", marker='x', label='Llano-Restrepo')
 axes.plot(r, np.zeros(len(r)), 'b--', linewidth=0.5)
 axes.set_xlabel('$r$')
 axes.set_ylabel('$B(r)$')
-# axes.set_ylim([-0.4,0.05]) 
+# axes.set_ylim([-0.4,0.05])
 axes.set_xlim([0.75,2])
 axes.legend(markerscale=1, fontsize = 12)
 # plt.savefig(path+'/figures/gr'+test_number+'.png')

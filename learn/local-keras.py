@@ -13,13 +13,14 @@ train_path = path+'/train.dat'
 training_set    = np.loadtxt(train_path)
 train_size      = len(training_set)
 
-X_train = training_set[:train_size, 1:3]
+X_train = training_set[:train_size, 2:4]
 y_train = training_set[:train_size, 0]
 
 model = Sequential()
 model.add(Dense(12, input_dim=2, kernel_initializer='normal', activation='relu'))
-model.add(Dense(8, activation='relu'))
-model.add(Dense(4, activation='relu'))
+model.add(Dense(16, activation='relu'))
+model.add(Dense(16, activation='relu'))
+model.add(Dense(16, activation='relu'))
 model.add(Dense(1, activation='linear'))
 model.summary()
 
@@ -58,7 +59,7 @@ test_set    = np.loadtxt(test_path)
 test_size   = len(test_set)
 # test_size   = 10000
 
-X_test      = test_set [:test_size,1:3]
+X_test      = test_set [:test_size,2:4]
 bridge      = test_set [:test_size,0]
 
 Y_predicted = model.predict(X_test)
@@ -69,29 +70,3 @@ print(r2)
 
 plt.show()
 
-
-
-# hard    = [1,3,4]
-# core    = [8,9,10,11,15]
-# overlap = [12,13,14]
-# soft    = [2,6]
-# tot     = [1,2,3,4,6,8,9,10,11,12,13,14,15]
-
-# used    = hard + core
-
-# for i in np.arange(train_size):
-#     if np.any(used==n[i]):
-#         if 'X_res' in dir() :
-#             # print(X_res)
-#             X_res = np.vstack((X_res, X[i,:]))
-#             # print(X_res)
-#             # print(Y_res)
-#             Y_res = np.hstack((Y_res, Y[i]))
-#             # print(Y_res)
-
-#         else:
-#             X_res = X[i,:]
-#             Y_res = Y[i]
-
-# X = X_res
-# Y = Y_res

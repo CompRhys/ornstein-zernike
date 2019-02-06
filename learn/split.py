@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 def join(directory):
 
-    X = np.empty((0, 5))
+    X = np.empty((0, 6))
     y = np.empty((0,))
 
     for dirpath, _, filenames in os.walk(directory):
@@ -16,15 +16,16 @@ def join(directory):
             path_to_file = os.path.abspath(os.path.join(dirpath, file))
             number = re.findall('\d+', file)[-1]
             pot_type = np.floor(float(number)/100).astype(int)
-
-            if pot_type == 9:
-                pass
-            else:
-                test_case = np.loadtxt(path_to_file)
-                form =  pot_type * np.ones((test_case.shape[0],1))
-                output = np.column_stack((test_case[:,2:6],form[:]))
-                X = np.vstack((X, output))
-                y = np.concatenate((y, test_case[:,1]))
+            start = 0
+            end = -1
+            # if pot_type == 9:
+            #     pass
+            # else:
+            test_case = np.loadtxt(path_to_file)
+            form =  pot_type * np.ones((test_case.shape[0],1))
+            output = np.column_stack((test_case[start:end,2:7],form[start:end]))
+            X = np.vstack((X, output))
+            y = np.concatenate((y, test_case[start:end,1]))
 
     return X, y
 
@@ -45,5 +46,4 @@ if __name__ == '__main__':
     outpath = sys.argv[2]
 
     a, b = join(directory)
-    print(a.shape)
     main(outpath, a, b)

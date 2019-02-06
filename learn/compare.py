@@ -19,8 +19,8 @@ def main():
     # np.random.shuffle(test_set)
     # test_size   = 1000
 
-    X = test_set[:test_size, 1:3]
-    X_nl = test_set[:test_size, 1:5]
+    X = test_set[:test_size, 2:4]
+    X_nl = test_set[:test_size, 2:6]
     # phi         = test_set [:test_size,0]
     bridge = test_set[:test_size, 0]
     h = test_set[:test_size, 1]

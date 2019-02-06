@@ -13,7 +13,7 @@ train_path = path+'/train.dat'
 training_set    = np.loadtxt(train_path)
 train_size      = len(training_set)
 
-X_train = training_set[:train_size, 1:5]
+X_train = training_set[:train_size, 2:6]
 y_train = training_set[:train_size, 0]
 
 model = Sequential()
@@ -59,7 +59,7 @@ test_set    = np.loadtxt(test_path)
 test_size   = len(test_set)
 # test_size   = 10000
 
-X_test      = test_set [:test_size,1:5]
+X_test      = test_set [:test_size,2:6]
 bridge      = test_set [:test_size,0]
 
 Y_predicted = model.predict(X_test)
