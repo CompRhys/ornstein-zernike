@@ -11,7 +11,6 @@ Various machine learning algorithms were applied in order to do this.
 The critical results were that symbolic regression over the broad dataset recovers the hypernetted-chain closure showing that a data driven approach is consistent with current analytical theories. The second signifcant result is that use of a non-local closure relationship offers increased efficacy when compared to local closure relationships. Non-locality is intractible analytically and so this demonstrates the fact that machine learning allows us to gain further predictive insight into physical systems that is otherwise impractical to obtain.
 
 # Todo:
-* use python package pyblock for blocking? if we take cavity region results this should be fine
-* write cavity measurement simulations
-* write post-processing to combine the two regimes
-* 
+* Apply arcsinh transform to the data and then experiment with different loss functions
+* Look at an inverse design application i.e. a pourous fluid. This is done by simulating large colloids in small colloids and then using only the small colloid correlations. The inverted potential should then be able to recover the small colloid structure without the need for larger colloids if the methodology works.
+* Iterative Ornstein-Zernike Inversion.
