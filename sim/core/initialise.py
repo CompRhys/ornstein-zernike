@@ -33,7 +33,7 @@ def disperse_energy(syst, temp, timestep, n_test=0):
           .strip().format(energy, act_min_dist))
 
     # Relax structure
-    syst.minimize_energy.init(f_max=10.0, gamma=1.0,
+    syst.minimize_energy.init(f_max=20.0, gamma=1.0,
                               max_steps=1000, max_displacement=0.05)
     syst.minimize_energy.minimize()
 

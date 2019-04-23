@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.rcParams.update({'font.size': 16})
 
 def individual():
-    path = os.path.expanduser('~') + '/closure'
+    path = os.path.expanduser('~') + '/work/closure'
     outpath = path + '/data/passed/'
     inpath = path + '/data/tested/'
     files = os.listdir(outpath)

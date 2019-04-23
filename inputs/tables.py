@@ -6,36 +6,29 @@ import sys
 import numpy as np
 
 
-def main():
-    output_path = sys.argv[1]
-
+def main(output_path):
     r_min = 0.0
     r_max = 2.0
     samples = 4096
     rad = np.linspace(r_min, r_max, samples)
+  
+    lj(output_path, rad)          # single minima
+    morse(output_path, rad)
 
-    # single minima
-    # lj(output_path, rad)
-    # morse(output_path, rad)
+    soft(output_path, rad)        # repulsive
+    yukawa(output_path, rad)
+    wca(output_path, rad)
+    
+    dlvo(output_path, rad)        # double minima
+    exp_well(output_path, rad)
 
-    # repulsive
-    # soft(output_path, rad)
-    # yukawa(output_path, rad)
-    # wca(output_path, rad)
+    step(output_path, rad)        # step potentials
+    csw(output_path, rad)           
+    rssaw(output_path, rad)
 
-    # double minima
-    # dlvo(output_path, rad)
-    # exp_well(output_path, rad)
-
-    # step potenstials
-    # step(output_path, rad)
-    # csw(output_path, rad)
-    # rssaw(output_path, rad)
-
-    # soft potentials
-    # gaussian(output_path, rad)
-    # hat(output_path)
-    # hertzian(output_path)
+    gaussian(output_path, rad)    # soft potentials
+    hat(output_path)              
+    hertzian(output_path)
 
     llano(output_path)
 
@@ -404,4 +397,5 @@ def save_table(path, ptype, number, radius, field):
     np.savetxt('{}input_{}{}.dat'.format(path, ref, index), output)
 
 if __name__ == '__main__':
-    main()
+    output_path = sys.argv[1]
+    main(output_path)

@@ -1,14 +1,17 @@
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense
 from tensorflow.python.keras.callbacks import EarlyStopping
 from sklearn.metrics import r2_score
 
+from mpl_toolkits.mplot3d import Axes3D
 
-path = os.path.expanduser('~')+'/closure/data/train'
-train_path = path+'/train.dat'
+train_path = sys.argv[1]
+test_path = sys.argv[2]
 
 training_set    = np.loadtxt(train_path)
 train_size      = len(training_set)
@@ -24,7 +27,7 @@ model.add(Dense(16, activation='relu'))
 model.add(Dense(1, activation='linear'))
 model.summary()
 
-model.compile(loss='mse', optimizer='adam')
+model.compile(loss='logcosh', optimizer='sgd')
 
 print("Learning MLP model with %i training points" %train_size)
 
@@ -54,19 +57,29 @@ plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
 
 
-test_path   = path+'/test.dat'
 test_set    = np.loadtxt(test_path)
 test_size   = len(test_set)
 # test_size   = 10000
 
-X_test      = test_set [:test_size,2:4]
-bridge      = test_set [:test_size,0]
+X_test      = test_set[:test_size,2:4]
+bridge      = test_set[:test_size,0]
 
 Y_predicted = model.predict(X_test)
 
 r2          = r2_score(bridge, Y_predicted)
 print(r2)
 
+num = 50
+x = np.linspace(-1, 2, num)
+y = np.linspace(-30, 2, num)
+xx, yy = np.meshgrid(x,y)
+points = np.vstack([xx.reshape(-1), yy.reshape(-1)]).T
+y_surf = model.predict(points)
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.plot(points[:,0], points[:,1], y_surf.reshape(-1,))
+ax.plot(X_train[:,0], X_train[:,1], y_train.reshape(-1,), marker="o", markersize=0.5, linestyle="None",)
+
 
 plt.show()
-

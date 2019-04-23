@@ -7,7 +7,7 @@ from mayavi import mlab
 
 def main():
 
-    path = os.path.expanduser('~') + '/closure'
+    path = os.path.expanduser('~') + '/work/closure'
     outpath = path + '/data/passed/'
     inpath = path + '/data/tested/'
 

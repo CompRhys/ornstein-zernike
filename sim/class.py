@@ -14,7 +14,7 @@ def main(input_path, input_number, input_bpart, input_cpart,
          input_temp, input_density):
 
     display_figures = True
-    input_path = '/home/rhys/closure/data/raw/'
+    input_path = '/home/rhys/work/closure/data/raw/'
 
     phi = np.loadtxt('{}phi_p{}.dat'.format(input_path, input_number))
     rdf = np.loadtxt('{}rdf_d{}_n{}_t{}_p{}.dat'.format(
@@ -26,10 +26,10 @@ def main(input_path, input_number, input_bpart, input_cpart,
     mu = np.loadtxt('{}mu_d{}_n{}_t{}_p{}.dat'.format(
         input_path, input_density, input_cpart, input_temp, input_number))
 
-    llanob = np.genfromtxt('sim/core/llanob.dat', delimiter=',', dtype=float)
-    llanoy = np.genfromtxt('sim/core/llanoy.dat', delimiter=',', dtype=float)
+    # llanob = np.genfromtxt('sim/core/llanob.dat', delimiter=',', dtype=float)
+    # llanoy = np.genfromtxt('sim/core/llanoy.dat', delimiter=',', dtype=float)
 
-    print(llanoy.shape)
+    # print(llanoy.shape)
 
     r = rdf[0, :]
     r_bins = len(r)
@@ -50,7 +50,7 @@ def main(input_path, input_number, input_bpart, input_cpart,
     axes[0, 1].hist(mu, 'auto')
     axes[1, 1].plot(r2, (dir_cav))
     axes[1, 1].plot(r2, (dirm_cav))
-    axes[1, 1].plot(llanoy[:, 0], np.exp(llanoy[:, 2]))
+    # axes[1, 1].plot(llanoy[:, 0], np.exp(llanoy[:, 2]))
 
     fig.tight_layout()
 
@@ -157,6 +157,8 @@ def main(input_path, input_number, input_bpart, input_cpart,
     # axes[0, 1].plot(tr, tesy + 1)
     # axes[0, 1].plot(tr, (- avg_rdf + tesy + 1) * 10 + 1)
     axes[0, 1].plot(r, avg_rdf)
+    axes[0, 1].plot(r, np.gradient(avg_rdf)*r/np.max(np.gradient(avg_rdf)))
+    axes[0, 1].plot(r, np.gradient(avg_rdf)/np.max(np.gradient(avg_rdf)))
     axes[0, 1].fill_between(r, avg_rdf + err_rdf * 100, avg_rdf - err_rdf * 100,
                             alpha=0.3)
     axes[0, 1].plot(r, np.ones(len(r)), 'C0--', linewidth=1.0)
@@ -193,6 +195,7 @@ def main(input_path, input_number, input_bpart, input_cpart,
                             avg_sq_switch - err_sq_switch * 10, alpha=0.2)
     axes[1, 0].plot(q_fft, qswitch, color='r',
                     linewidth=1, marker='x', label='W(q)')
+    axes[0, 1].plot(r, avg_rdf)
     axes[1, 0].set_xlim([0, 12.5])
     # axes[1, 0].set_ylim([-.5, 2.0])
     axes[1, 0].set_xlabel('$q$')
@@ -202,7 +205,7 @@ def main(input_path, input_number, input_bpart, input_cpart,
     # plot y(r)
 
     axes[1, 1].plot(r, np.arcsinh(bulk_cav), label='$y_{dir}(r)$')
-    axes[1, 1].plot(r2, np.arcsinh(dir_cav), label='$y_{cav}(r)$')
+    axes[1, 1].plot(r2, np.arcsinh(dirm_cav), label='$y_{cav}(r)$')
     axes[1, 1].fill_between(r2, np.arcsinh(dir_cav + err_cav),
                             np.arcsinh(dir_cav - err_cav), alpha=0.1)
     # axes[1, 1].plot(r2, np.arcsinh(dirm_cav), label='$y_{mean}(r)$')
@@ -218,8 +221,8 @@ def main(input_path, input_number, input_bpart, input_cpart,
     # plot b(r)
 
     axes[1, 2].plot(r, bridge, label='$y_{sw}(r)$')
-    axes[1, 2].plot(llanob[:, 0], llanob[:, 2], label='$y_{llano}(r)$')
-    # axes[1, 2].plot(r, bridge2, label='$y_{fft}(r)$')
+    # axes[1, 2].plot(llanob[:, 0], llanob[:, 2], label='$y_{llano}(r)$')
+    axes[1, 2].plot(r, bridge2, label='$y_{fft}(r)$')
     # axes[1, 2].set_xlim([0, 2])
     axes[1, 2].set_xlabel('r/$\sigma$')
     axes[1, 2].set_ylabel('$B(r)$')

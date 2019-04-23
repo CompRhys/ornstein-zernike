@@ -127,6 +127,8 @@ class processing:
         avg_f_dcf = np.mean(f_dcf, axis=0)
         err_f_dcf = np.sqrt(np.var(f_dcf, axis=0, ddof=1) / f_dcf.shape[0])
 
+        print('fft {}, switch {}'.format(np.mean(err_f_dcf/avg_f_dcf), np.mean(err_dcf/avg_dcf)))
+
         return avg_dcf, err_dcf, avg_sq_sw, err_sq_sw
 
     def ccf(self):
@@ -150,7 +152,7 @@ class processing:
         return avg_ccf, err_ccf
 
 
-def process_set(path, number, bpart, cpart, temp, rho, directory):
+def process_set(index, path, number, bpart, cpart, temp, rho, directory):
     data = processing()
     try:
         data.load_data(path, number, bpart, cpart, temp, rho)
@@ -158,6 +160,7 @@ def process_set(path, number, bpart, cpart, temp, rho, directory):
         return
 
     if data.equilibrium(temp):
+        print('index {} number {}'.format(index, number))
         avg_tcf, err_tcf = data.rdf()
         avg_dcf, err_dcf, avg_sq, err_sq = data.dcf()
         avg_ccf, err_ccf = data.ccf()
@@ -191,7 +194,9 @@ if __name__ == "__main__":
     with open(filename) as f:
         lines = f.read().splitlines()
 
+    i = 0 
     for line in lines:
+        i +=1
         opt = parse.parse_str(line)
         # input_path = opt.output
         input_number = re.findall('\d+', opt.table)[-1]
@@ -200,5 +205,5 @@ if __name__ == "__main__":
         input_density = opt.rho
         input_temp = opt.temp
 
-        process_set(input_path, input_number, input_bpart, input_cpart,
+        process_set(i, input_path, input_number, input_bpart, input_cpart,
                     input_temp, input_density, output_path)
