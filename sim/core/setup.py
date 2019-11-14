@@ -21,16 +21,10 @@ def setup_box(input_file, rho, n_part, n_test=0):
     syst.seed = 42
 
     # Setup Real Particles
-    for i in range(n_part - n_test):
+    for i in range(n_part):
         syst.part.add(id=i, pos=np.random.random(3) * syst.box_l, type=0)
 
-    # Setup Pseudo Particles
-    for i in range(n_test):
-        syst.part.add(id=n_part-1-i, pos=np.random.random(3) * syst.box_l, 
-            type=n_test-i)
-
-
-    set_potentials(syst, input_file, n_test)
+    bulk_potentials(syst, input_file)
 
     return syst
 
@@ -41,20 +35,9 @@ def bulk_potentials(system, input_file):
     """
     tables = np.loadtxt(input_file)
 
-    system.force_cap = 0.  # Hard coded
+    # print(tables.shape)
 
-    # skin depth; 0.2 is common choice see pg 556 Frenkel & Smit,
-    system.cell_system.skin = 0.2 * tables[0, -1]
-
-    system.non_bonded_inter[0, 0].tabulated.set_params(
-        min=tables[0, 0], max=tables[0, -1],
-        energy=tables[1, :], force=tables[2, :])
-
-def set_potentials(system, input_file, n_test):
-    """
-
-    """
-    tables = np.loadtxt(input_file)
+    # exit()
 
     system.force_cap = 0.  # Hard coded
 
@@ -63,13 +46,12 @@ def set_potentials(system, input_file, n_test):
 
     system.non_bonded_inter[0, 0].tabulated.set_params(
         min=tables[0, 0], max=tables[0, -1],
-        energy=tables[1, :], force=tables[2, :])
+        energy=tables[1, :], force=-tables[2, :])
 
-    for i in range(n_test):
-        system.non_bonded_inter[n_test-i, 0].tabulated.set_params(
-            min=tables[0, 0], max=tables[0, -1],
-            energy=tables[1, :], force=tables[2, :])
+    # lj_eps = 1.0
+    # lj_sig = 1.0
+    # lj_cut = 2.5 * lj_sig
 
-    # system.non_bonded_inter[1, 1].tabulated.set_params(
-    #     min=tables[0, 0], max=tables[0, -1],
-    #     energy=np.zeros_like(tables[1, :]), force=np.zeros_like(tables[1, :]))
+    # system.non_bonded_inter[0, 0].lennard_jones.set_params(
+    #     epsilon=lj_eps, sigma=lj_sig,
+    #     cutoff=lj_cut, shift="auto")

@@ -13,11 +13,12 @@ def disperse_energy(syst, temp, timestep, n_test=0):
 
     print("\nDisperse Particles by Minimization of Energy\n")
 
+    syst.time_step = timestep
+
     # Thermostat
-    syst.thermostat.set_langevin(kT=temp, gamma=1.0)
+    syst.thermostat.set_langevin(kT=temp, gamma=1.0, seed=123)
     n_part = len(syst.part.select())
     syst.thermostat.suspend()
-    syst.time_step = timestep
 
     types = range(n_test+1)
 
@@ -33,9 +34,13 @@ def disperse_energy(syst, temp, timestep, n_test=0):
           .strip().format(energy, act_min_dist))
 
     # Relax structure
-    syst.minimize_energy.init(f_max=20.0, gamma=1.0,
-                              max_steps=1000, max_displacement=0.05)
-    syst.minimize_energy.minimize()
+    syst.integrator.set_steepest_descent(
+        f_max=10., gamma=0.1, max_displacement=0.005)
+    syst.integrator.run(2000)
+    syst.integrator.set_vv()
+
+    # remove force capping
+    syst.force_cap = 0
 
     for j in range(len(comb)):
         act_min_dist[j] = syst.analysis.min_dist(
@@ -46,6 +51,8 @@ def disperse_energy(syst, temp, timestep, n_test=0):
     print("After Minimization: Energy={:.3e}, Min Dist={}"
           .strip().format(energy, act_min_dist))
 
+
+    # recover thermostat
     syst.thermostat.recover()
     # return min_dist
     pass

@@ -24,9 +24,9 @@ def main(inpath, output):
 
     cav_part = [512]
     cav_steps = [128]
-    cav_iter = [2]
+    cav_iter = [48]
     cav_radius = [1.2]
-    mu_repeats = [25000]
+    mu_repeats = [1000]
 
     burn_steps = [2048]
     burn_iter_max = [16]

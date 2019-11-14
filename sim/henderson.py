@@ -7,7 +7,6 @@ import timeit
 import numpy as np
 from core import setup, initialise, sample, parse
 
-
 def main(input_file, density, temperature, dr, dt,
          burn_steps, burn_iterations_max, n_part, sampling_steps,
          sampling_iterations, r_size_max, mu_repeats, output_path):
@@ -37,7 +36,9 @@ def main(input_file, density, temperature, dr, dt,
 
     cav, mu = sample.sample_henderson(system, dt, sampling_iterations,
                                       sampling_steps, n_part, mu_repeats,
-                                      r, dr, bins)
+                                      r, dr, bins, input_file)
+
+    
 
     # save the results
     test_number = re.findall('\d+', input_file)[-1]

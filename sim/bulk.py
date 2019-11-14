@@ -33,11 +33,6 @@ def main(input_file, density, temperature, dr, dt,
                                              sampling_iterations, dr,
                                              sq_order, sampling_steps)
 
-    # Block the data
-    block_size = 256
-    rdf = block.block_data(rdf, block_size)
-    sq = block.block_data(sq, block_size)
-
     # Extract the interaction potential used by the model
     phi = sample.get_phi(system, r)
 

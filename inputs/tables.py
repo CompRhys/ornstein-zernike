@@ -8,9 +8,12 @@ import numpy as np
 
 def main(output_path):
     r_min = 0.0
-    r_max = 2.0
-    samples = 4096
-    rad = np.linspace(r_min, r_max, samples)
+    r_max = 3.0
+    dr = 0.01
+    # samples = 4096
+    # rad = np.linspace(r_min, r_max, samples)
+    rad = np.arange(r_min, r_max, dr)
+
   
     lj(output_path, rad)          # single minima
     morse(output_path, rad)
@@ -27,10 +30,10 @@ def main(output_path):
     rssaw(output_path, rad)
 
     gaussian(output_path, rad)    # soft potentials
-    hat(output_path)              
-    hertzian(output_path)
+    hat(output_path, dr)              
+    hertzian(output_path, dr)
 
-    llano(output_path)
+    llano(output_path, dr)
 
     pass
 
@@ -96,8 +99,6 @@ def morse(path, r):
                 test_number += 1
 
 
-
-
 def yukawa(path, r):
     ptype = 'yukawa'
     alpha = [2., 4., 6.]
@@ -116,6 +117,7 @@ def yukawa(path, r):
             save_table(path, ptype, test_number, r, potential)
 
             test_number += 1
+
 
 def wca(path, r):
     ptype = 'wca'
@@ -304,7 +306,7 @@ def gaussian(path, r):
             test_number += 1
 
 
-def hat(path):
+def hat(path, dr):
     ptype = 'hat'
     force = [4.0, 6.0, 8.0, 10.0]
     cutoff = [2.0, 3.0]  # don't make sigma too small
@@ -325,19 +327,18 @@ def hat(path):
             test_number += 1
 
 
-def hertzian(path):
+def hertzian(path, dr):
     ptype = 'hertzian'
     energy = [4.0, 6.0, 8.0, 10.0]
     cutoff = [2.0, 3.0]  # don't make sigma too small
 
     test_number = 0
     r_min = 0.0
-    samples = 4096
 
     for p3 in energy:
         for r_max in cutoff:
 
-            r = np.linspace(r_min, r_max, samples)
+            r = np.arange(r_min,r_max,dr)
 
             potential = p3 * np.power((1. - r / r_max), 2.5)
 
@@ -346,7 +347,7 @@ def hertzian(path):
             test_number += 1
 
 
-def llano(path):
+def llano(path, dr):
     ptype = 'llano'
     energy = [2./3.]
 
@@ -354,8 +355,7 @@ def llano(path):
 
     r_min       = 0.0
     r_max       = 2.5
-    samples     = 4096
-    r           = np.linspace(r_min,r_max,samples)
+    r           = np.arange(r_min,r_max,dr)
 
     r6 = np.zeros_like(r)
     r6[1:] = np.power(1. / r[1:], 6.)
@@ -371,10 +371,10 @@ def llano(path):
         test_number += 1
 
 def make_output(phi, r):
-    force = np.gradient(phi, r[1])
-    # phi = phi + force[-1] * r[-1]
+    force = - np.gradient(phi, r[1])
+    phi = phi - force[-1] * r[-1] 
     phi = phi - phi[-1]  # shift phi
-    # force = force - force[-1]
+    force = force - force[-1]
 
     output = np.vstack((r, phi, force))
 
