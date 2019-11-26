@@ -34,11 +34,6 @@ def bulk_potentials(system, input_file):
 
     """
     tables = np.loadtxt(input_file)
-
-    # print(tables.shape)
-
-    # exit()
-
     system.force_cap = 0.  # Hard coded
 
     # skin depth; 0.2 is common choice see pg 556 Frenkel & Smit,
@@ -48,10 +43,3 @@ def bulk_potentials(system, input_file):
         min=tables[0, 0], max=tables[0, -1],
         energy=tables[1, :], force=-tables[2, :])
 
-    # lj_eps = 1.0
-    # lj_sig = 1.0
-    # lj_cut = 2.5 * lj_sig
-
-    # system.non_bonded_inter[0, 0].lennard_jones.set_params(
-    #     epsilon=lj_eps, sigma=lj_sig,
-    #     cutoff=lj_cut, shift="auto")

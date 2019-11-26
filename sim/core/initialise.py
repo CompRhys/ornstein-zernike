@@ -3,7 +3,7 @@ import espressomd
 import numpy as np
 from itertools import combinations_with_replacement as cmb
 
-def disperse_energy(syst, temp, timestep, n_test=0):
+def disperse_energy(syst, temp, timestep, n_types=1):
     """
     This routine moves the particles via gradient descent to a local energy 
     minimium. The parameters f_max, gamma and max_displacement are necessary to
@@ -20,7 +20,7 @@ def disperse_energy(syst, temp, timestep, n_test=0):
     n_part = len(syst.part.select())
     syst.thermostat.suspend()
 
-    types = range(n_test+1)
+    types = range(n_types)
 
     comb = list(cmb(types, 2))
     act_min_dist = np.zeros(len(comb))
@@ -99,6 +99,6 @@ def equilibrate_system(syst, timestep, final_temp, burn, iterations):
         print("\nSystem failed to equilibrate")
 
     print('\nTemperature at end of equilibration = {:.3f} +/- {:.3f}'
-        .format(avg_temp, err_temp, syst.time))
+        .format(avg_temp, err_temp))
     print('System time at end of equilibration {:.1f}'
-        .format(avg_temp, err_temp, syst.time))
+        .format(syst.time))

@@ -18,9 +18,9 @@ def main(inpath, output):
     dt = [0.005]
     dr = [0.02]
 
-    bulk_part = [1024]
+    bulk_part = [4096]
     bulk_steps = [16]
-    bulk_iter = [1024]
+    bulk_iter = [4096]
 
     cav_part = [512]
     cav_steps = [128]

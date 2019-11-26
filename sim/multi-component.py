@@ -1,20 +1,38 @@
 import sys
 import os
 import re
-import argparse
 import espressomd
 import timeit
 import numpy as np
 from core import setup, initialise, sample, parse, block
 
 
-def main(input_file, density, temperature, dr, dt, 
-        burn_steps, burn_iterations_max, n_part, sampling_steps,
-        sampling_iterations,  output_path):
+def main():
+    
     start = timeit.default_timer()
 
-    # Setup Espresso Environment
-    system = setup.setup_box(input_file, density, n_part)
+    # Control the density of large particles
+    box_l = np.power(n_part / rho, 1.0 / 3.0)
+    print('Density={:.2f} \nNumber of Particles={} \nBox Size={:.1f}'
+        .strip().format(rho, n_part, box_l))
+
+    # Box setup
+    system = espressomd.System(box_l=[box_l] * 3)
+
+    # Hardcode PRNG seed
+    system.seed = 42
+    np.random.seed()
+
+    # Setup Real Particles
+    for i in range(n_part):
+        system.part.add(id=i, pos=np.random.random(3) * syst.box_l, type=0)
+
+    for i in range(n_solv):
+        system.part.add(id=i+n_part, pos=np.random.random(3) * syst.box_l, type=1)
+
+    system.cell_system.skin = 0.2 * r_cut_max
+
+
 
     # Disperse Particles to energy minimum
     initialise.disperse_energy(system, temperature, dt)
@@ -36,7 +54,7 @@ def main(input_file, density, temperature, dr, dt,
     test_number = re.findall('\d+', input_file)[-1]
 
     # save rdf
-    f_rdf = '{}rdf_d{}_n{}_t{}_p{}.dat'.format(
+    f_rdf = 'rdf_test.dat'.format(
         output_path, density, n_part, temperature, test_number)
 
     if os.path.isfile(f_rdf):
@@ -48,7 +66,7 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f, rdf_out)
 
     # save sq
-    f_sq = '{}sq_d{}_n{}_t{}_p{}.dat'.format(
+    f_sq = 'rq_test.dat'.format(
         output_path, density, n_part, temperature, test_number)
 
     if os.path.isfile(f_sq):
@@ -59,18 +77,8 @@ def main(input_file, density, temperature, dr, dt,
     with open(f_sq, 'ab') as f:
         np.savetxt(f, sq_out)
 
-    # save phi
-    f_phi = '{}phi_p{}.dat'.format(
-        output_path, test_number)
-
-    if os.path.isfile(f_phi):
-        pass
-    else:
-        phi_out = np.vstack((r, phi))
-        np.savetxt(f_phi, phi_out)
-
     # save temp
-    f_temp = '{}temp_d{}_n{}_t{}_p{}.dat'.format(
+    f_temp = 'temp_test.dat'.format(
         output_path, density, n_part, temperature, test_number)
 
     if os.path.isfile(f_temp):
@@ -88,16 +96,4 @@ def main(input_file, density, temperature, dr, dt,
 
 
 if __name__ == "__main__":
-    opt = parse.parse_input()
-
-    main(opt.table, 
-        opt.rho, 
-        opt.temp, 
-        opt.dr, 
-        opt.dt, 
-        opt.burn_steps, 
-        opt.burn_iter_max, 
-        opt.bulk_part, 
-        opt.bulk_steps,
-        opt.bulk_iter, 
-        opt.output)
+    main()

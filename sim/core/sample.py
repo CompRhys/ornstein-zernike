@@ -6,6 +6,9 @@ import espressomd
 import numpy as np
 import timeit
 
+from tqdm import tqdm
+
+
 from sklearn.metrics import pairwise_distances as pdist2
 import matplotlib.pyplot as plt
 
@@ -44,7 +47,7 @@ def get_pos_vel(syst, timestep, iterations, steps):
     return pos, vel, temp, time - time[0]
 
 
-def get_bulk(syst, timestep, iterations, dr, order, steps, type_part=[0]):
+def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     """
     This function samples the radial distribution function between the two 
     lists of particle types a and b. The size of the radius over which we 
@@ -58,42 +61,51 @@ def get_bulk(syst, timestep, iterations, dr, order, steps, type_part=[0]):
     start = timeit.default_timer()
     n_part = len(syst.part.select())
 
-    r_size_max = syst.box_l[0] * 0.5
-    bins = np.power(2, (np.floor(np.log2(r_size_max / dr)))).astype(int)
+    r_max = syst.box_l[0] * 0.5
+    bins = 256
+    # bins = np.power(2, (np.floor(np.log2(r_size_max / dr)))).astype(int)
+
+    dr = r_max / bins
 
     r_min = dr / 2.
-    r_max = dr * bins + r_min
+    r_max = r_max + r_min
+
+    iterations = 1024
 
     syst.time_step = timestep
     rdf_data = np.zeros((iterations, bins))
-    sq_data = np.zeros((iterations, order))
+    sq_data = np.zeros((iterations, bins))
     temp = np.zeros(iterations)
     time = np.zeros(iterations)
 
     time_sq = 0.
     time_rdf = 0.
 
-    for i in range(1, iterations + 1):
+    for i in tqdm(range(1, iterations + 1)):
         syst.integrator.run(steps)
         start_rdf = timeit.default_timer()
         r, rdf = syst.analysis.rdf(rdf_type="rdf", type_list_a=type_part,
                                    type_list_b=type_part, r_min=r_min,
                                    r_max=r_max, r_bins=bins)
+
         time_rdf += timeit.default_timer() - start_rdf
         start_sq = timeit.default_timer()
+        # q, s_q = syst.analysis.structure_factor_uniform(
         q, s_q = syst.analysis.structure_factor_fast(
         # q, s_q = syst.analysis.structure_factor(
-            sf_types=type_part, sf_order=order)
+            sf_types=type_part, sf_order=bins)
+            # sf_types=type_part, sf_order=order)
+
         time_sq += timeit.default_timer() - start_sq
         sq_data[i - 1, :] = s_q
         rdf_data[i - 1, :] = rdf
         temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
         time[i - 1] = syst.time
-        if (i % 128) == 0:
-            now = timeit.default_timer()
-            print(('sample run {}/{}, temperature = {:.3f}, '
-                   'system time = {:.1f} (real time = {:.1f})').format(
-                i, iterations, temp[i - 1], syst.time, now - start))
+        # if (i % 128) == 0:
+        #     now = timeit.default_timer()
+        #     print(('sample run {}/{}, temperature = {:.3f}, '
+        #            'system time = {:.1f} (real time = {:.1f})').format(
+        #         i, iterations, temp[i - 1], syst.time, now - start))
 
     print('fraction of time', time_sq / (time_sq + time_rdf))
 
