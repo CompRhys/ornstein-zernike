@@ -10,30 +10,28 @@ def main(output_path):
     r_min = 0.0
     r_max = 3.0
     dr = 0.01
-    # samples = 4096
-    # rad = np.linspace(r_min, r_max, samples)
-    rad = np.arange(r_min, r_max, dr)
+    r = np.arange(r_min, r_max, dr)
 
   
-    lj(output_path, rad)          # single minima
-    morse(output_path, rad)
+    lj(output_path, r)          # single minima
+    morse(output_path, r)
 
-    soft(output_path, rad)        # repulsive
-    yukawa(output_path, rad)
-    wca(output_path, rad)
+    soft(output_path, r)        # repulsive
+    yukawa(output_path, r)
+    wca(output_path, r)
     
-    dlvo(output_path, rad)        # double minima
-    exp_well(output_path, rad)
+    dlvo(output_path, r)        # double minima
+    exp_well(output_path, r)
 
-    step(output_path, rad)        # step potentials
-    csw(output_path, rad)           
-    rssaw(output_path, rad)
+    step(output_path, r)        # step potentials
+    csw(output_path, r)           
+    rssaw(output_path, r)
 
-    gaussian(output_path, rad)    # soft potentials
+    gaussian(output_path, r)    # soft potentials
     hat(output_path, dr)              
     hertzian(output_path, dr)
-
-    llano(output_path, dr)
+    
+    # llano(output_path, dr)
 
     pass
 
@@ -371,6 +369,9 @@ def llano(path, dr):
         test_number += 1
 
 def make_output(phi, r):
+    """
+    shift and augement the potential to remove discontinuities
+    """
     force = - np.gradient(phi, r[1])
     phi = phi - force[-1] * r[-1] 
     phi = phi - phi[-1]  # shift phi
@@ -392,9 +393,10 @@ def save_table(path, ptype, number, radius, field):
 
     output = make_output(field, radius)
 
-    ref = str(labels.index(ptype) + 1)
+    # ref = str(labels.index(ptype) + 1)
+    ref = ptype
     index = format(number, "02")
-    np.savetxt('{}input_{}{}.dat'.format(path, ref, index), output)
+    np.savetxt('{}input_{}_{}.dat'.format(path, ref, index), output)
 
 if __name__ == '__main__':
     output_path = sys.argv[1]

@@ -9,12 +9,12 @@ from core import setup, initialise, sample, parse, block
 
 
 def main(input_file, density, temperature, dr, dt, 
-        burn_steps, burn_iterations_max, n_part, sampling_steps,
+        burn_steps, burn_iterations_max, box_size, sampling_steps,
         sampling_iterations,  output_path):
     start = timeit.default_timer()
 
     # Setup Espresso Environment
-    system = setup.setup_box(input_file, density, n_part)
+    system, n_part = setup.setup_box(input_file, density, box_size)
 
     # Disperse Particles to energy minimum
     initialise.disperse_energy(system, temperature, dt)
@@ -33,11 +33,14 @@ def main(input_file, density, temperature, dr, dt,
     phi = sample.get_phi(system, r)
 
     # save the results
-    test_number = re.findall('\d+', input_file)[-1]
+    _, pot_type, pot_number = input_file.split("_")
+    pot_number = re.findall('\d+', pot_number)[-1]
+
+    print(pot_number, pot_type)
 
     # save rdf
-    f_rdf = '{}rdf_d{}_n{}_t{}_p{}.dat'.format(
-        output_path, density, n_part, temperature, test_number)
+    f_rdf = '{}rdf_{}_{}_p{}_n{}_t{}.dat'.format(
+        output_path, pot_type, pot_number, density, n_part, temperature)
 
     if os.path.isfile(f_rdf):
         rdf_out = rdf
@@ -48,8 +51,8 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f, rdf_out)
 
     # save sq
-    f_sq = '{}sq_d{}_n{}_t{}_p{}.dat'.format(
-        output_path, density, n_part, temperature, test_number)
+    f_sq = '{}sq_{}_{}_p{}_n{}_t{}.dat'.format(
+        output_path, pot_type, pot_number, density, n_part, temperature)
 
     if os.path.isfile(f_sq):
         sq_out = sq
@@ -60,8 +63,8 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f, sq_out)
 
     # save phi
-    f_phi = '{}phi_p{}.dat'.format(
-        output_path, test_number)
+    f_phi = '{}phi_{}_{}.dat'.format(
+        output_path, pot_type, pot_number)
 
     if os.path.isfile(f_phi):
         pass
@@ -70,8 +73,8 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f_phi, phi_out)
 
     # save temp
-    f_temp = '{}temp_d{}_n{}_t{}_p{}.dat'.format(
-        output_path, density, n_part, temperature, test_number)
+    f_temp = '{}temp_{}_{}_p{}_n{}_t{}.dat'.format(
+        output_path, pot_type, pot_number, density, n_part, temperature)
 
     if os.path.isfile(f_temp):
         temp_old = np.loadtxt(f_temp)
@@ -97,7 +100,7 @@ if __name__ == "__main__":
         opt.dt, 
         opt.burn_steps, 
         opt.burn_iter_max, 
-        opt.bulk_part, 
+        opt.box_size, 
         opt.bulk_steps,
         opt.bulk_iter, 
         opt.output)

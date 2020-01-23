@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.fftpack import dst, idst
+from scipy.interpolate import InterpolatedUnivariateSpline as Spline
+# from scipy.interpolate import UnivariateSpline as Spline
+
 
 
 def hr_to_cr(bins, rho, data, radius, error=None, axis=1):
@@ -112,13 +115,7 @@ def sq_and_hr_to_cr(bins, rho, hr, r, S_k, k, axis=1):
     return cr
 
 
-def smooth_function(f,n):
-    for i in range(n):
-        f = smooth_func(f)
-    return f
-
-
-def smooth_func(f):
+def smooth_function(f):
     """
     five point smoothing as detailed on page 204 of Computer Simulation of Liquids.
     """
@@ -139,3 +136,34 @@ def smooth_func(f):
                               17 * f[:, i] + 12 * f[:, i + 1] - 3 * f[:, i + 2])
 
     return g
+
+
+def quadratic_spline_roots(spl):
+    roots = []
+    knots = spl.get_knots()
+    for a, b in zip(knots[:-1], knots[1:]):
+        u, v, w = spl(a), spl((a+b)/2), spl(b)
+        t = np.roots([u+w-2*v, w-u, 2*v])
+        t = t[np.isreal(t) & (np.abs(t) <= 1)]
+        roots.extend(t*(b-a)/2 + (b+a)/2)
+    return np.array(roots)
+
+def spline_max(r, tcf):
+    """
+    we get gradients from taking a cubic spline and then calculating the values for the 
+    gradients from the resulting quadratic spline obtained by taking derivatives of the
+    function spline. In order to define the gradients in a consistent manner we define
+    them wrt to a lengthscale imposed by the principle peak.
+    """
+
+    spl_tcf = Spline(r, tcf, k=3)
+    cr_pts = quadratic_spline_roots(spl_tcf.derivative())
+    cr_pts = np.append(cr_pts, (r[0], r[-1]))  # also check the endpoints of the interval
+    cr_vals = spl_tcf(cr_pts)
+    max_index = np.argmax(cr_vals)
+    # print("Maximum value {} at {}".format(cr_vals[max_index], cr_pts[max_index]))
+    # min_index = np.argmin(cr_vals)
+    # print("Minimum value {} at {}".format(cr_vals[min_index], cr_pts[min_index]))
+
+    return cr_pts[max_index]
+

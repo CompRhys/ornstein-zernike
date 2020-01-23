@@ -4,15 +4,16 @@ import numpy as np
 import argparse
 
 
-def setup_box(input_file, rho, n_part, n_test=0):
+def setup_box(input_file, rho, box_l, n_test=0):
     """
     Initialises the system based off an input file
     """
 
     # Control the density
-    box_l = np.power(n_part / rho, 1.0 / 3.0)
-    print('Density={:.2f} \nNumber of Particles={} \nBox Size={:.1f}'
-        .strip().format(rho, n_part, box_l))
+    n_part = int(rho * (box_l**3.))
+    # box_l = np.power(n_part / rho, 1.0 / 3.0)
+    print('Potential={} \nDensity={:.2f} \nNumber of Particles={} \nBox Size={:.1f}'
+        .strip().format(input_file, rho, n_part, box_l))
 
     # Box setup
     syst = espressomd.System(box_l=[box_l] * 3)
@@ -26,7 +27,7 @@ def setup_box(input_file, rho, n_part, n_test=0):
 
     bulk_potentials(syst, input_file)
 
-    return syst
+    return syst, n_part
 
 
 def bulk_potentials(system, input_file):
@@ -41,5 +42,5 @@ def bulk_potentials(system, input_file):
 
     system.non_bonded_inter[0, 0].tabulated.set_params(
         min=tables[0, 0], max=tables[0, -1],
-        energy=tables[1, :], force=-tables[2, :])
+        energy=tables[1, :], force=tables[2, :])
 

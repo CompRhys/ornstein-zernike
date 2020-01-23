@@ -18,32 +18,24 @@ def main(inpath, output):
     dt = [0.005]
     dr = [0.02]
 
-    bulk_part = [4096]
+    box_size = [20]
+
     bulk_steps = [16]
     bulk_iter = [4096]
-
-    cav_part = [512]
-    cav_steps = [128]
-    cav_iter = [48]
-    cav_radius = [1.2]
-    mu_repeats = [1000]
 
     burn_steps = [2048]
     burn_iter_max = [16]
 
     comb = itertools.product(tables, rho, temp, dt, dr,
-                             bulk_part, bulk_steps, bulk_iter,
-                             cav_part, cav_steps, cav_iter, cav_radius,
-                             mu_repeats, burn_steps, burn_iter_max)
+                             box_size, bulk_steps, bulk_iter,
+                             burn_steps, burn_iter_max)
 
     outfilename = 'inputs.txt'
     with open(outfilename, 'w') as f:
         for li in comb:
             f.write(('--table {} --rho {} --temp {} --dt {} --dr {} '
-                     '--bulk_part {} --bulk_steps {} --bulk_iter {} '
-                     '--cav_part {} --cav_steps {} --cav_iter {} --cav_radius {} '
-                     '--mu_repeats {} --burn_steps {} --burn_iter_max {} '
-                     '--output {}\n').format(*li, output))
+                     '--box_size {} --bulk_steps {} --bulk_iter {} '
+                     '--burn_steps {} --burn_iter_max {} --output {}\n').format(*li, output))
 
 if __name__ == '__main__':
     inpath = sys.argv[1]

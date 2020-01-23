@@ -20,8 +20,8 @@ def main():
     sampling_iterations = 1024
     sampling_steps = 16
 
-    n_part = 512
-    n_solv = 512
+    n_part = 1024
+    n_solv = 1024
 
     density = 0.8
     
@@ -51,18 +51,18 @@ def main():
     system.non_bonded_inter[0, 0].lennard_jones.set_params(
     epsilon=lj_eps, sigma=lj_sig, cutoff=2.5, shift='auto')
 
-    # Disperse Particles to energy minimum
-    initialise.disperse_energy(system, temperature, dt, n_types=1)
+    # # Disperse Particles to energy minimum
+    # initialise.disperse_energy(system, temperature, dt, n_types=1)
 
-    # Integrate the system to warm up to specified temperature
-    initialise.equilibrate_system(system, dt,
-                                  temperature, burn_steps,
-                                  burn_iterations_max)
+    # # Integrate the system to warm up to specified temperature
+    # initialise.equilibrate_system(system, dt,
+    #                               temperature, burn_steps,
+    #                               burn_iterations_max)
 
-    # Sample the RDF for the system
-    rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
-                                             sampling_iterations, 
-                                             sampling_steps)
+    # # Sample the RDF for the system
+    # rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
+    #                                          sampling_iterations, 
+    #                                          sampling_steps)
 
     for i in range(n_solv):
         system.part.add(id=i+n_part, pos=np.random.random(3) * system.box_l, type=1)
@@ -97,18 +97,11 @@ def main():
                                              sampling_iterations, 
                                              sampling_steps)
 
-    # # Extract the interaction potential used by the model
-    # phi = sample.get_phi(system, r)
 
     plt.figure()
-    plt.plot(r, np.mean(rdf, axis=0))
     plt.plot(r_ex, np.mean(rdf_ex, axis=0))
 
     plt.figure()
-    plt.plot(r, np.mean(rdf, axis=0) - np.mean(rdf_ex, axis=0))
-
-    plt.figure()
-    plt.plot(q, np.mean(sq, axis=0))
     plt.plot(q_ex, np.mean(sq_ex, axis=0))
     plt.show()
 

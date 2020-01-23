@@ -12,16 +12,12 @@ def parse_input():
     parser.add_argument('--burn_steps', type=int)
     parser.add_argument('--burn_iter_max', type=int)
 
-    parser.add_argument('--bulk_part', type=int)
+    # parser.add_argument('--bulk_part', type=int)
+
+    parser.add_argument('--box_size', type=float)
+
     parser.add_argument('--bulk_steps', type=int)
     parser.add_argument('--bulk_iter', type=int)
-
-    parser.add_argument('--mu_repeats', type=int)
-
-    parser.add_argument('--cav_part', type=int)
-    parser.add_argument('--cav_steps', type=int)
-    parser.add_argument('--cav_iter', type=int)
-    parser.add_argument('--cav_radius', type=float)
 
 
     parser.add_argument('--output', type=str)

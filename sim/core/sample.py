@@ -8,7 +8,6 @@ import timeit
 
 from tqdm import tqdm
 
-
 from sklearn.metrics import pairwise_distances as pdist2
 import matplotlib.pyplot as plt
 
@@ -62,15 +61,12 @@ def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     n_part = len(syst.part.select())
 
     r_max = syst.box_l[0] * 0.5
-    bins = 256
-    # bins = np.power(2, (np.floor(np.log2(r_size_max / dr)))).astype(int)
+    bins = 512
 
     dr = r_max / bins
 
     r_min = dr / 2.
     r_max = r_max + r_min
-
-    iterations = 1024
 
     syst.time_step = timestep
     rdf_data = np.zeros((iterations, bins))
