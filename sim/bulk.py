@@ -5,7 +5,7 @@ import argparse
 import espressomd
 import timeit
 import numpy as np
-from core import setup, initialise, sample, parse, block
+from core import setup, initialise, sample, parse
 
 
 def main(input_file, density, temperature, dr, dt, 

@@ -3,8 +3,6 @@ from scipy.fftpack import dst, idst
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 # from scipy.interpolate import UnivariateSpline as Spline
 
-
-
 def hr_to_cr(bins, rho, data, radius, error=None, axis=1):
     """
     This function takes h(r) and uses the OZ equation to find c(r) this is done via a 3D fourier transform

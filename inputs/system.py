@@ -3,14 +3,13 @@ import re
 import sys
 import itertools
 
-
 def file_paths(directory):
     for dirpath, _, filenames in os.walk(directory):
         for f in filenames:
             yield os.path.abspath(os.path.join(dirpath, f))
 
-def main(inpath, output):
-    tables = file_paths(inpath)
+def main(pot_path, raw_path, pass_path, fail_path):
+    tables = file_paths(pot_path)
 
     rho = [0.4, 0.5, 0.6, 0.7, 0.8]
     temp = [1.]
@@ -35,10 +34,13 @@ def main(inpath, output):
         for li in comb:
             f.write(('--table {} --rho {} --temp {} --dt {} --dr {} '
                      '--box_size {} --bulk_steps {} --bulk_iter {} '
-                     '--burn_steps {} --burn_iter_max {} --output {}\n').format(*li, output))
+                     '--burn_steps {} --burn_iter_max {} --output {}'
+                     ' --pass_path {} --fail_path {}\n').format(*li, raw_path, pass_path, fail_path))
 
 if __name__ == '__main__':
-    inpath = sys.argv[1]
-    output = sys.argv[2]
+    pot_path = sys.argv[1]
+    raw_path = sys.argv[2]
+    pass_path = sys.argv[3]
+    fail_path = sys.argv[3]
 
-    main(inpath, output)
+    main(pot_path, raw_path, pass_path, fail_path)

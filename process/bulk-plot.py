@@ -13,7 +13,7 @@ matplotlib.rcParams.update({'font.size': 12})
 
 def main(input_path, pot_type, pot_number, box_size, temp, input_density):
 
-    input_path = '/home/reag2/PhD/second-year/closure/data/raw/'
+    # input_path = '/home/reag2/PhD/second-year/closure/data/raw/'
 
     n_part = int(input_density * (box_size**3.))
     density = n_part / (box_size**3.)

@@ -1,6 +1,6 @@
 import argparse
 
-def parse_input():
+def parse_input(string):
     parser = argparse.ArgumentParser()
     parser.add_argument('--table', type=str)
 
@@ -21,7 +21,9 @@ def parse_input():
 
 
     parser.add_argument('--output', type=str)
+    parser.add_argument('--pass_path', type=str)
+    parser.add_argument('--fail_path', type=str)
 
-    args = parser.parse_args()
+    args = parser.parse_args(string.split())
 
     return args

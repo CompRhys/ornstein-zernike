@@ -1,0 +1,2 @@
+--table /home/reag2/PhD/second-year/closure/data/tables/input_csw_03.dat --rho 0.6 --temp 1.0 --dt 0.005 --dr 0.02 --box_size 20 --bulk_steps 16 --bulk_iter 4096 --burn_steps 2048 --burn_iter_max 16 --output data/raw/ --pass_path data/passed/ --fail_path data/failed/
+--table /home/reag2/PhD/second-year/closure/data/tables/input_csw_03.dat --rho 0.6 --temp 1.0 --dt 0.005 --dr 0.02 --box_size 20 --bulk_steps 16 --bulk_iter 4096 --burn_steps 2048 --burn_iter_max 16 --output data/raw/ --pass_path data/passed/ --fail_path data/failed/
