@@ -70,12 +70,8 @@ def main(input_path, pot_type, pot_number, box_size, temp, input_density):
 
     # Switching function w(q)
 
-    # peak = np.min(np.argmax(block_sq, axis=1))
-    # peak = np.max(np.argmax(block_sq, axis=1))
-    print(np.argmax(block_sq > 0.75*np.max(block_sq), axis=1))
-
+    # print(np.argmax(block_sq > 0.75*np.max(block_sq), axis=1))
     peak = np.median(np.argmax(block_sq > 0.75*np.max(block_sq), axis=1)).astype(int)
-    print(peak)
 
     after = len(q_fft) - peak 
     switch = (1 + np.cbrt(np.cos(np.pi * q[:peak] / q[peak]))) / 2.
@@ -120,6 +116,12 @@ def main(input_path, pot_type, pot_number, box_size, temp, input_density):
     # bridge = np.log(sw_cav) + avg_dcf_swtch - avg_tcf
     # bridge2 = np.log(sw_cav) + avg_dcf_fft - avg_tcf
 
+
+
+    r_peak_dir = r[np.argmax(avg_tcf)]
+    r_peak_spl = transforms.spline_max(r, avg_tcf)
+    r_peak_err = r[np.argmax(avg_tcf+err_tcf)]
+
     fig, axes = plt.subplots(2, 3, figsize=(18, 8))
 
     # Plot phi(r)
@@ -134,122 +136,90 @@ def main(input_path, pot_type, pot_number, box_size, temp, input_density):
 
     axes[0, 1].plot(r, avg_tcf + 1, color="tab:blue")
     axes[0, 1].fill_between(r, avg_tcf + err_tcf + 1, avg_tcf - err_tcf + 1, alpha=0.3)
-    axes[0, 1].plot(r, block_tcf.T + 1, alpha=0.1)
+    # axes[0, 1].plot(r, block_tcf.T + 1, alpha=0.1)
     axes[0, 1].plot((r[0],r[-1]), np.ones(2), '--', color="tab:blue")
     axes[0, 1].set_xlabel('r/$\sigma$')
     axes[0, 1].set_ylabel('$g(r)$')
 
+    axes[1,1].plot(r, avg_grad_tcf*r_peak_dir)
+    axes[1,1].fill_between(r, (avg_grad_tcf + err_grad_tcf)*r_peak_dir, 
+                            (avg_grad_tcf - err_grad_tcf)*r_peak_dir, alpha=0.2)
+    axes[1, 1].set_xlabel('r/$\sigma$')
+    axes[1, 1].set_ylabel('$g\'(r)$')
+
     # Plot c(r)
 
-    axes[0, 2].plot(r, avg_dcf_swtch, label='$c_{sw}(r)$')
-    axes[0, 2].fill_between(r, avg_dcf_swtch + err_dcf_swtch, avg_dcf_swtch - err_dcf_swtch, alpha=0.2)
+    axes[0, 2].plot(r, avg_dcf_dir, label='$c_{dir}(r)$')
+    axes[0, 2].fill_between(r, avg_dcf_dir + err_dcf_dir, avg_dcf_dir - err_dcf_dir, alpha=0.2)
 
     axes[0, 2].plot(r, avg_dcf_fft, label='$c_{fft}(r)$')
     axes[0, 2].fill_between(r, avg_dcf_fft + err_dcf_fft, avg_dcf_fft - err_dcf_fft, alpha=0.2)
 
-    # axes[0, 2].plot(r, avg_dcf_dir, label='$c_{dir}(r)$')
-    # axes[0, 2].fill_between(r, avg_dcf_dir + err_dcf_dir, avg_dcf_dir - err_dcf_dir, alpha=0.2)
+    axes[0, 2].plot(r, avg_dcf_swtch, label='$c_{sw}(r)$')
+    axes[0, 2].fill_between(r, avg_dcf_swtch + err_dcf_swtch, avg_dcf_swtch - err_dcf_swtch, alpha=0.2)
+
+    # axes[0, 2].plot(r, avg_dcf_both, label='$c_{indep}(r)$')
+    # axes[0, 2].fill_between(r, avg_dcf_both + err_dcf_both, avg_dcf_both - err_dcf_both, alpha=0.2)
 
     axes[0, 2].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
     axes[0, 2].set_xlabel('r/$\sigma$')
     axes[0, 2].set_ylabel('$c(r)$')
     axes[0, 2].legend()
 
-    # Plot s(q)
+    axes[1,2].plot(r, avg_grad_dcf_swtch*r_peak_dir)
+    axes[1,2].fill_between(r, (avg_grad_dcf_swtch + err_grad_dcf_swtch)*r_peak_dir, 
+                            (avg_grad_dcf_swtch - err_grad_dcf_swtch)*r_peak_dir, alpha=0.2)
+    axes[1, 2].set_xlabel('r/$\sigma$')
+    axes[1, 2].set_ylabel('$c\'(r)$')
 
-    axes[1, 0].plot(q, avg_sq, linewidth=1, marker='x', label='$S_{dir}(q)$')
-    axes[1, 0].fill_between(q, avg_sq + err_sq, avg_sq - err_sq, alpha=0.2)
-
-    axes[1, 0].plot(q_fft, avg_sq_fft, linewidth=1, marker='o', mfc='none', label='$S_{fft}(q)$')
-    axes[1, 0].fill_between(q_fft, avg_sq_fft + err_sq_fft, avg_sq_fft - err_sq_fft, alpha=0.2)
-
-    axes[1, 0].plot(q_fft, avg_sq_switch, color='g', marker='+', linewidth=1, label='$S_{sw}(q)$')
-    axes[1, 0].fill_between(q_fft, avg_sq_switch + err_sq_switch, avg_sq_switch - err_sq_switch, alpha=0.2)
-
-    axes[1, 0].plot(q_fft, switch, color='r',linewidth=1, marker='*', label='W(q)')
-    axes[1, 0].set_xlim([0, 12.5])
-    # axes[1, 0].set_ylim([-.5, 4.0])
-    axes[1, 0].set_xlabel('$q$')
-    axes[1, 0].set_ylabel('$S(q), W(q)$')
-    axes[1, 0].legend()
-
-    # # Plot y(r)
-
-    # axes[1, 1].plot(q_fft, np.fft.fft(avg_tcf), label='$y_{dir}(r)$')
-    # axes[1, 1].plot(r, np.log((avg_tcf+1)/r**2), label='$y_{dir}(r)$')
-    # axes[1, 1].plot(r2, np.arcsinh(dir_cav), label='$y_{cav}(r)$')
-    # axes[1, 1].fill_between(r2, np.arcsinh(dir_cav + err_cav), np.arcsinh(dir_cav - err_cav), alpha=0.1)
-    # axes[1, 1].plot(r2, np.arcsinh(dirm_cav), label='$y_{mean}(r)$')
-    # # axes[1, 1].plot(llanoy[:, 0], np.arcsinh(
-    # #     np.exp(llanoy[:, 3])), label='$y_{llano}(r)$')
-    # axes[1, 1].plot(r, np.arcsinh(sw_cav), label='$y_{sw}(r)$')
-    # axes[1, 1].plot(r, rswitch, label='W(r)')
-    # # axes[1, 1].set_ylim([0,5])
-    # axes[1, 1].set_xlabel('r/$\sigma$')
-    # axes[1, 1].set_ylabel('$y(r)$')
-    # axes[1, 1].legend()
 
     # # Plot b(r)
 
-    axes[1, 2].plot(r, br, label='$b_{sw}(r)$')
-    axes[1, 2].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
+    axes[1, 0].plot(r, br, label='$b_{sw}(r)$')
+    axes[1, 0].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
     # axes[1, 2].plot(r, bridge, label='$y_{sw}(r)$')
     # # axes[1, 2].plot(llanob[:, 0], llanob[:, 2], label='$y_{llano}(r)$')
     # axes[1, 2].plot(r, bridge2, label='$y_{fft}(r)$')
     # axes[1, 2].set_xlim([0, 3.5])
-    axes[1, 2].set_xlabel('r/$\sigma$')
-    axes[1, 2].set_ylabel('$B(r)$')
-    axes[1, 2].legend(loc=4)
+    axes[1, 0].set_xlabel('r/$\sigma$')
+    axes[1, 0].set_ylabel('$B(r)$')
+    axes[1, 0].legend(loc=4)
 
     fig.tight_layout()
+    
 
-    f, axarr = plt.subplots(2, figsize=(6,6), sharex=True, 
+    # Plot s(q)
+
+    fig_2, axes_2 = plt.subplots(2, figsize=(6,6), sharex=True, 
         gridspec_kw={'height_ratios':[3, 1]})
 
-    axarr[0].plot(q, avg_sq, linewidth=1, marker='x', label='$S_{dir}(q)$')
-    axarr[0].plot(q_fft, avg_sq_fft, linewidth=1, marker='o', mfc='none', label='$S_{fft}(q)$')
-    # axarr[0].plot(q_fft, avg_sq_switch, color='g', marker='x', linewidth=1, label='$S_{hybrid}(q)$')
-    # axarr[0].plot(q_fft, qswitch, color='r', linewidth=1, marker='x', label='W(q)')
-    axarr[0].set_ylabel('$S(q), W(q)$')
-    axarr[0].legend()
+    axes_2[0].plot(q, avg_sq, linewidth=1, marker='x', label='$S_{dir}(q)$')
+    axes_2[0].fill_between(q, avg_sq + err_sq, avg_sq - err_sq, alpha=0.2)
 
-    axarr[1].plot(q, (- avg_sq + avg_sq_fft), linewidth=1, marker='x', label='$\Delta S(q)$')
-    # axarr[1].plot(q_sam, (- avg_sq + avg_sq_fft[:len(q_sam)]) , linewidth=1, marker='x', label='$\Delta S(q)$')
-    axarr[1].plot((0,13), (0,0), 'k-.', linewidth=0.5)
-    axarr[1].set_xlabel('$q$')
-    axarr[1].set_ylabel('$\Delta S(q)$')
-    axarr[1].set_xlim([0, 12.5])
-    # axarr[1].set_ylim([-0.1, 0.3])
-    # axarr[1].legend()
-    f.tight_layout()
+    axes_2[0].plot(q_fft, avg_sq_fft, linewidth=1, marker='o', mfc='none', label='$S_{fft}(q)$')
+    axes_2[0].fill_between(q_fft, avg_sq_fft + err_sq_fft, avg_sq_fft - err_sq_fft, alpha=0.2)
 
-    # calculate and adjust gradients
+    axes_2[0].plot(q_fft, avg_sq_switch, color='g', marker='+', linewidth=1, label='$S_{sw}(q)$')
+    axes_2[0].fill_between(q_fft, avg_sq_switch + err_sq_switch, avg_sq_switch - err_sq_switch, alpha=0.2)
 
-    r_peak_dir = r[np.argmax(avg_tcf)]
-    r_peak_spl = transforms.spline_max(r, avg_tcf)
-    r_peak_err = r[np.argmax(avg_tcf+err_tcf)]
-    print("direct {}\ndirect+err {}\nspl {}".format(r_peak_spl, r_peak_dir, r_peak_err))
+    axes_2[0].plot(q_fft, switch, color='r',linewidth=1, marker='*', label='W(q)')
+    axes_2[0].set_xlim([0, 12.5])
+    # axes_2[1, 0].set_ylim([-.5, 4.0])
+    axes_2[0].set_xlabel('$q$')
+    axes_2[0].set_ylabel('$S(q), W(q)$')
+    axes_2[0].legend()
 
-    f, ax = plt.subplots(2, 2, figsize=(10,8))
-    ax[0,0].plot(r, avg_tcf)
-    ax[0,0].fill_between(r, avg_tcf + err_tcf, avg_tcf - err_tcf, alpha=0.2)
-
-    ax[0,1].plot(r, avg_grad_tcf*r_peak_dir)
-    ax[0,1].fill_between(r, (avg_grad_tcf + err_grad_tcf)*r_peak_dir, 
-                            (avg_grad_tcf - err_grad_tcf)*r_peak_dir, alpha=0.2)
-
-    ax[1,0].plot(r, avg_dcf_swtch)
-    ax[1,0].fill_between(r, avg_dcf_swtch + err_dcf_swtch, avg_dcf_swtch - err_dcf_swtch, alpha=0.2)
-
-
-    ax[1,1].plot(r, avg_grad_dcf_swtch*r_peak_dir)
-    ax[1,1].fill_between(r, (avg_grad_dcf_swtch + err_grad_dcf_swtch)*r_peak_dir, 
-                            (avg_grad_dcf_swtch - err_grad_dcf_swtch)*r_peak_dir, alpha=0.2)
-    f.tight_layout()
+    axes_2[1].plot(q, (- avg_sq + avg_sq_fft), linewidth=1, marker='x', label='$\Delta S(q)$')
+    # axes_2[1].plot(q_sam, (- avg_sq + avg_sq_fft[:len(q_sam)]) , linewidth=1, marker='x', label='$\Delta S(q)$')
+    axes_2[1].plot((0,13), (0,0), 'k-.', linewidth=0.5)
+    axes_2[1].set_xlabel('$q$')
+    axes_2[1].set_ylabel('$\Delta S(q)$')
+    axes_2[1].set_xlim([0, 12.5])
+    # axes_2[1].set_ylim([-0.1, 0.3])
+    # axes_2[1].legend()
+    fig_2.tight_layout()
 
     plt.show()
-
-
 
 
 if __name__ == "__main__":
