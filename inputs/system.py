@@ -20,7 +20,7 @@ def main(pot_path, raw_path, pass_path, fail_path):
     box_size = [20]
 
     bulk_steps = [16]
-    bulk_iter = [8192]
+    bulk_iter = [1024]
 
     burn_steps = [2048]
     burn_iter_max = [16]

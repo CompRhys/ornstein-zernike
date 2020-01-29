@@ -55,22 +55,24 @@ module purge                               # Removes all modules still loaded
 module load rhel7/default-peta4            # REQUIRED - loads the basic environment
 
 #! Insert additional module load commands after this line if needed:
-module load cmake-3.8.1-gcc-5.4.0-hvzxbkm
+module load cmake-3.13.4-gcc-5.4.0-i5srskm
 module load fftw-3.3.7-gcc-5.4.0-4q5ew4t
-module load openmpi-1.10.7-gcc-5.4.0-er4kz4u
+module load openmpi-1.10.7-gcc-5.4.0-er4kz4u 
 module load py-cython-0.25.2-gcc-5.4.0-z5xiovh
-module load boost-1.66.0-gcc-5.4.0-slpq3un
-module load gcc-5.4.0-gcc-4.8.5-fis24gg
+module load boost-1.68.0-gcc-5.4.0-bko7kev
+module load gcc/6
+module load cuda/9.2
 module load miniconda3/4.5.1
 
+#openmpi-4.0.1-gcc-5.4.0-p6kt5jp
 #! Full path to application executable: 
-application="pypresso"
+application="./home/reag2/espresso/build/pypresso"
 
 #! Pull the inputfile from a text document
 inflags="`awk "NR==$line" $input`"
 
 #! Run options for the application:
-options="sim/bulk.py $inflags"
+options="/home/reag2/closure/sim/bulk.py $inflags"
 
 #! Work directory (i.e. where the job will run):
 workdir="$SLURM_SUBMIT_DIR"  # The value of SLURM_SUBMIT_DIR sets workdir to the directory
