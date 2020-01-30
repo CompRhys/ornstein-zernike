@@ -4,9 +4,9 @@ import re
 import espressomd
 import timeit
 import numpy as np
-from core import setup, initialise, sample, parse, block
+from core import setup, initialise, sample, parse
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 def main():
@@ -98,12 +98,12 @@ def main():
                                              sampling_steps)
 
 
-    plt.figure()
-    plt.plot(r_ex, np.mean(rdf_ex, axis=0))
+    # plt.figure()
+    # plt.plot(r_ex, np.mean(rdf_ex, axis=0))
 
-    plt.figure()
-    plt.plot(q_ex, np.mean(sq_ex, axis=0))
-    plt.show()
+    # plt.figure()
+    # plt.plot(q_ex, np.mean(sq_ex, axis=0))
+    # plt.show()
 
     # # save rdf
     # f_rdf = 'rdf_test.dat'
