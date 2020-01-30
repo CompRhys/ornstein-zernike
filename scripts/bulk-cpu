@@ -57,16 +57,15 @@ module load rhel7/default-peta4            # REQUIRED - loads the basic environm
 #! Insert additional module load commands after this line if needed:
 module load cmake-3.13.4-gcc-5.4.0-i5srskm
 module load fftw-3.3.7-gcc-5.4.0-4q5ew4t
-module load openmpi-1.10.7-gcc-5.4.0-er4kz4u 
+module load openmpi-2.1.1-gcc-5.4.0-pnbvtpr
 module load py-cython-0.25.2-gcc-5.4.0-z5xiovh
 module load boost-1.68.0-gcc-5.4.0-bko7kev
 module load gcc/6
 module load cuda/9.2
 module load miniconda3/4.5.1
 
-#openmpi-4.0.1-gcc-5.4.0-p6kt5jp
 #! Full path to application executable: 
-application="./home/reag2/espresso/build/pypresso"
+application="/home/reag2/espresso/build/pypresso"
 
 #! Pull the inputfile from a text document
 inflags="`awk "NR==$line" $input`"

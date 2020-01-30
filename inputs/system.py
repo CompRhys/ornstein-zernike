@@ -41,6 +41,6 @@ if __name__ == '__main__':
     pot_path = sys.argv[1]
     raw_path = sys.argv[2]
     pass_path = sys.argv[3]
-    fail_path = sys.argv[3]
+    fail_path = sys.argv[4]
 
     main(pot_path, raw_path, pass_path, fail_path)
