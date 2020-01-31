@@ -6,42 +6,9 @@ import espressomd
 import numpy as np
 import timeit
 
-# from tqdm import tqdm
+from tqdm import tqdm
 
 # from sklearn.metrics import pairwise_distances as pdist2
-
-def get_pos_vel(syst, timestep, iterations, steps):
-    """
-    save the unfolded particle positions and velocity
-    """
-
-    print("\nSampling\n")
-
-    start = timeit.default_timer()
-    n_part = len(syst.part.select())
-    syst.time_step = timestep
-
-    pos = np.zeros((iterations, 3*n_part))
-    vel = np.zeros((iterations, 3*n_part))
-
-    temp = np.zeros(iterations)
-    time = np.zeros(iterations)
-
-    for i in range(iterations):
-        syst.integrator.run(steps)
-        pos[i,:] = np.copy(syst.part[:].pos).reshape(-1)
-        vel[i,:] = np.copy(syst.part[:].v).reshape(-1)
-
-        temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
-        time[i - 1] = syst.time
-        if (i % 128) == 0:
-            now = timeit.default_timer()
-            print(('sample run {}/{}, temperature = {:.3f}, '
-                   'system time = {:.1f} (real time = {:.1f})').format(
-                i, iterations, temp[i - 1], syst.time, now - start))
-
-    return pos, vel, temp, time - time[0]
-
 
 def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     """
@@ -58,7 +25,7 @@ def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     n_part = len(syst.part.select())
 
     r_max = syst.box_l[0] * 0.5
-    bins = 512
+    bins = 1024
 
     dr = r_max / bins
 
@@ -74,32 +41,35 @@ def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     time_sq = 0.
     time_rdf = 0.
 
-    # for i in tqdm(range(1, iterations + 1)):
-    for i in range(1, iterations + 1):
-        syst.integrator.run(steps)
-        start_rdf = timeit.default_timer()
-        r, rdf = syst.analysis.rdf(rdf_type="rdf", type_list_a=type_part,
-                                   type_list_b=type_part, r_min=r_min,
-                                   r_max=r_max, r_bins=bins)
+    try:
+        for i in tqdm(range(1, iterations + 1)):
+        # for i in range(1, iterations + 1):
+            syst.integrator.run(steps)
+            start_rdf = timeit.default_timer()
+            r, rdf = syst.analysis.rdf(rdf_type="rdf", type_list_a=type_part,
+                                    type_list_b=type_part, r_min=r_min,
+                                    r_max=r_max, r_bins=bins)
 
-        time_rdf += timeit.default_timer() - start_rdf
-        start_sq = timeit.default_timer()
-        # q, s_q = syst.analysis.structure_factor_uniform(
-        q, s_q = syst.analysis.structure_factor_fast(
-        # q, s_q = syst.analysis.structure_factor(
-            sf_types=type_part, sf_order=bins)
-            # sf_types=type_part, sf_order=order)
+            time_rdf += timeit.default_timer() - start_rdf
+            start_sq = timeit.default_timer()
+            # q, s_q = syst.analysis.structure_factor_uniform(
+            q, s_q = syst.analysis.structure_factor_fast(
+            # q, s_q = syst.analysis.structure_factor(
+                sf_types=type_part, sf_order=bins)
+                # sf_types=type_part, sf_order=order)
 
-        time_sq += timeit.default_timer() - start_sq
-        sq_data[i - 1, :] = s_q
-        rdf_data[i - 1, :] = rdf
-        temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
-        time[i - 1] = syst.time
-        if (i % 128) == 0:
-            now = timeit.default_timer()
-            print(('sample run {}/{}, temperature = {:.3f}, '
-                   'system time = {:.1f} (real time = {:.1f})').format(
-                i, iterations, temp[i - 1], syst.time, now - start))
+            time_sq += timeit.default_timer() - start_sq
+            sq_data[i - 1, :] = s_q
+            rdf_data[i - 1, :] = rdf
+            temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
+            time[i - 1] = syst.time
+            # if (i % 128) == 0:
+            #     now = timeit.default_timer()
+            #     print(('sample run {}/{}, temperature = {:.3f}, '
+            #            'system time = {:.1f} (real time = {:.1f})').format(
+            #         i, iterations, temp[i - 1], syst.time, now - start))
+    except KeyboardInterrupt:
+        pass
 
     print('fraction of time', time_sq / (time_sq + time_rdf))
 
@@ -261,3 +231,37 @@ def get_phi(syst, radius, type_a=0, type_b=0):
 #     # print("slow {}, time {}".format(mu_slow, end_fast-end_slow))
 
 #     return mu_fast
+
+
+
+# def get_pos_vel(syst, timestep, iterations, steps):
+#     """
+#     save the unfolded particle positions and velocity
+#     """
+
+#     print("\nSampling\n")
+
+#     start = timeit.default_timer()
+#     n_part = len(syst.part.select())
+#     syst.time_step = timestep
+
+#     pos = np.zeros((iterations, 3*n_part))
+#     vel = np.zeros((iterations, 3*n_part))
+
+#     temp = np.zeros(iterations)
+#     time = np.zeros(iterations)
+
+#     for i in range(iterations):
+#         syst.integrator.run(steps)
+#         pos[i,:] = np.copy(syst.part[:].pos).reshape(-1)
+#         vel[i,:] = np.copy(syst.part[:].v).reshape(-1)
+
+#         temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
+#         time[i - 1] = syst.time
+#         if (i % 128) == 0:
+#             now = timeit.default_timer()
+#             print(('sample run {}/{}, temperature = {:.3f}, '
+#                    'system time = {:.1f} (real time = {:.1f})').format(
+#                 i, iterations, temp[i - 1], syst.time, now - start))
+
+#     return pos, vel, temp, time - time[0]

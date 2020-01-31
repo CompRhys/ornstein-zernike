@@ -6,9 +6,10 @@ import itertools
 def file_paths(directory):
     for dirpath, _, filenames in os.walk(directory):
         for f in filenames:
-            yield os.path.abspath(os.path.join(dirpath, f))
+            # yield os.path.abspath(os.path.join(dirpath, f))
+            yield os.path.join(dirpath, f)
 
-def main(pot_path, raw_path, pass_path, fail_path):
+def main(pot_path, raw_path):
     tables = file_paths(pot_path)
 
     rho = [0.4, 0.5, 0.6, 0.7, 0.8]
@@ -20,7 +21,7 @@ def main(pot_path, raw_path, pass_path, fail_path):
     box_size = [20]
 
     bulk_steps = [16]
-    bulk_iter = [1024]
+    bulk_iter = [8192]
 
     burn_steps = [2048]
     burn_iter_max = [16]
@@ -34,13 +35,10 @@ def main(pot_path, raw_path, pass_path, fail_path):
         for li in comb:
             f.write(('--table {} --rho {} --temp {} --dt {} --dr {} '
                      '--box_size {} --bulk_steps {} --bulk_iter {} '
-                     '--burn_steps {} --burn_iter_max {} --output {}'
-                     ' --pass_path {} --fail_path {}\n').format(*li, raw_path, pass_path, fail_path))
+                     '--burn_steps {} --burn_iter_max {} --output {}\n').format(*li, raw_path))
 
 if __name__ == '__main__':
     pot_path = sys.argv[1]
     raw_path = sys.argv[2]
-    pass_path = sys.argv[3]
-    fail_path = sys.argv[4]
 
-    main(pot_path, raw_path, pass_path, fail_path)
+    main(pot_path, raw_path)

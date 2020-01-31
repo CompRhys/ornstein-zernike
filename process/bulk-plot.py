@@ -13,8 +13,6 @@ matplotlib.rcParams.update({'font.size': 12})
 
 def main(input_path, pot_type, pot_number, box_size, temp, input_density):
 
-    # input_path = '/home/reag2/PhD/second-year/closure/data/raw/'
-
     n_part = int(input_density * (box_size**3.))
     density = n_part / (box_size**3.)
 
@@ -225,14 +223,11 @@ def main(input_path, pot_type, pot_number, box_size, temp, input_density):
 if __name__ == "__main__":
     opt = parse.parse_input()
     input_path = opt.output
-    # input_number = re.findall(r'\d+', opt.table)[-1]
     _, pot_type, pot_number = opt.table.split("_")
     pot_number = re.findall('\d+', pot_number)[-1]
     input_size = opt.box_size
     input_density = opt.rho
     input_temp = opt.temp
-
-    print(opt)
 
     main(input_path, pot_type, pot_number, input_size,
          input_temp, input_density)

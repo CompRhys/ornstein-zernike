@@ -19,7 +19,7 @@
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each.
 #SBATCH --ntasks=1
 #! How much wallclock time will be required?
-#SBATCH --time=02:00:00
+#SBATCH --time=24:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -63,6 +63,7 @@ module load boost-1.68.0-gcc-5.4.0-bko7kev
 module load gcc/6
 module load cuda/9.2
 module load miniconda3/4.5.1
+conda activate closure
 
 #! Full path to application executable: 
 application="/home/reag2/espresso/build/pypresso"

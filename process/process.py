@@ -6,9 +6,17 @@ import numpy as np
 from core import block, transforms, parse
 from tqdm import tqdm
 
-def process_input(input_path, pot_type, pot_number, 
-                    box_size, temp, input_density, pass_path, fail_path):
-
+def process_input(input_path, pot_type, pot_number, box_size, temp, 
+                    input_density, pass_path, fail_path):
+    """
+    
+    cleaning: identify a method to discard glassy systems. Not critical unlikely 
+    to see classes in single particle systems will be signifcantly more 
+    important in investigations of two particle systems. possible approaches 
+    involve looking at the intermediate scattering function (glasses won't 
+    decay), estimating a non-gaussian parameter (caging effects), looking at 
+    MSD for evidence of caged diffusion."""
+    
     n_part = int(input_density * (box_size**3.))
     density = n_part / (box_size**3.)
 
@@ -125,6 +133,8 @@ def process_input(input_path, pot_type, pot_number,
 
 if __name__ == "__main__":
     filename = sys.argv[1]
+    pass_path = sys.argv[2]
+    fail_path = sys.argv[3]
 
     with open(filename) as f:
         lines = f.read().splitlines()
@@ -133,9 +143,6 @@ if __name__ == "__main__":
     # for line in lines:
         opt = parse.parse_input(line)
         raw_path = opt.output
-        pass_path = opt.pass_path
-        fail_path = opt.fail_path
-        # input_number = re.findall(r'\d+', opt.table)[-1]
         _, pot_type, pot_number = opt.table.split("_")
         pot_number = re.findall('\d+', pot_number)[-1]
         input_size = opt.box_size

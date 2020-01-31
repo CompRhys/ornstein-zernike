@@ -19,10 +19,7 @@ def parse_input(string):
     parser.add_argument('--bulk_steps', type=int)
     parser.add_argument('--bulk_iter', type=int)
 
-
     parser.add_argument('--output', type=str)
-    parser.add_argument('--pass_path', type=str)
-    parser.add_argument('--fail_path', type=str)
 
     args = parser.parse_args(string.split())
 
