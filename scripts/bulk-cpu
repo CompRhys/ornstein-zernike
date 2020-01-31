@@ -63,7 +63,6 @@ module load boost-1.68.0-gcc-5.4.0-bko7kev
 module load gcc/6
 module load cuda/9.2
 module load miniconda3/4.5.1
-source activate closure
 
 #! Full path to application executable: 
 application="/home/reag2/espresso/build/pypresso"

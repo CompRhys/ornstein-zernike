@@ -6,7 +6,7 @@ import espressomd
 import numpy as np
 import timeit
 
-from tqdm import tqdm
+# from tqdm import tqdm
 
 # from sklearn.metrics import pairwise_distances as pdist2
 
@@ -42,8 +42,8 @@ def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     time_rdf = 0.
 
     try:
-        for i in tqdm(range(1, iterations + 1)):
-        # for i in range(1, iterations + 1):
+        # for i in tqdm(range(1, iterations + 1)):
+        for i in range(1, iterations + 1):
             syst.integrator.run(steps)
             start_rdf = timeit.default_timer()
             r, rdf = syst.analysis.rdf(rdf_type="rdf", type_list_a=type_part,
