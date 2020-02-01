@@ -38,8 +38,8 @@ def main(input_file, density, temperature, dr, dt,
     pot_number = re.findall('\d+', pot_number)[-1]
 
     # save rdf
-    f_rdf = '{}rdf_{}_{}_p{}_n{}_t{}.dat'.format(
-        output_path, pot_type, pot_number, density, n_part, temperature)
+    f_rdf = os.path.join(output_path,'rdf_{}_{}_p{}_n{}_t{}.dat'.format(
+        pot_type, pot_number, density, n_part, temperature))
 
     if os.path.isfile(f_rdf):
         rdf_out = rdf
@@ -50,8 +50,8 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f, rdf_out)
 
     # save sq
-    f_sq = '{}sq_{}_{}_p{}_n{}_t{}.dat'.format(
-        output_path, pot_type, pot_number, density, n_part, temperature)
+    f_sq = os.path.join(output_path,'sq_{}_{}_p{}_n{}_t{}.dat'.format(
+        pot_type, pot_number, density, n_part, temperature))
 
     if os.path.isfile(f_sq):
         sq_out = sq
@@ -62,8 +62,8 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f, sq_out)
 
     # save phi
-    f_phi = '{}phi_{}_{}.dat'.format(
-        output_path, pot_type, pot_number)
+    f_phi = os.path.join(output_path,'phi_{}_{}.dat'.format(
+        pot_type, pot_number))
 
     if os.path.isfile(f_phi):
         pass
@@ -72,8 +72,8 @@ def main(input_file, density, temperature, dr, dt,
         np.savetxt(f_phi, phi_out)
 
     # save temp
-    f_temp = '{}temp_{}_{}_p{}_n{}_t{}.dat'.format(
-        output_path, pot_type, pot_number, density, n_part, temperature)
+    f_temp = os.path.join(output_path,'temp_{}_{}_p{}_n{}_t{}.dat'.format(
+        pot_type, pot_number, density, n_part, temperature))
 
     if os.path.isfile(f_temp):
         temp_old = np.loadtxt(f_temp)
@@ -90,7 +90,10 @@ def main(input_file, density, temperature, dr, dt,
 if __name__ == "__main__":
     opt = parse.parse_input()
 
-    main(opt.table, 
+    pot_path = os.path.abspath(opt.table)
+    output_path = os.path.abspath(opt.output)
+
+    main(pot_path, 
         opt.rho, 
         opt.temp, 
         opt.dr, 
@@ -100,4 +103,4 @@ if __name__ == "__main__":
         opt.box_size, 
         opt.bulk_steps,
         opt.bulk_iter, 
-        opt.output)
+        output_path)
