@@ -11,7 +11,8 @@ from core import setup, initialise, sample, parse
 def main(input_file, density, temperature, dr, dt, 
         burn_steps, burn_iterations_max, box_size, sampling_steps,
         sampling_iterations,  output_path):
-    start = timeit.default_timer()
+    assert os.path.isdir(output_path), "Output Path Not Found {}".format(output_path)
+    assert os.path.isfile(input_file), "Input File Not Found {}".format(input_file)
 
     # Setup Espresso Environment
     system, n_part = setup.setup_box(input_file, density, box_size)
@@ -35,8 +36,6 @@ def main(input_file, density, temperature, dr, dt,
     # save the results
     _, pot_type, pot_number = input_file.split("_")
     pot_number = re.findall('\d+', pot_number)[-1]
-
-    print(pot_number, pot_type)
 
     # save rdf
     f_rdf = '{}rdf_{}_{}_p{}_n{}_t{}.dat'.format(
@@ -86,8 +85,6 @@ def main(input_file, density, temperature, dr, dt,
     with open(f_temp, 'ab') as f:
         t_out = np.column_stack((t, temp))
         np.savetxt(f, t_out)
-
-    print(timeit.default_timer() - start)
 
 
 if __name__ == "__main__":

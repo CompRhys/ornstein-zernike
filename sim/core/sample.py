@@ -4,11 +4,51 @@ import os
 import re
 import espressomd
 import numpy as np
+import time
 import timeit
 
-# from tqdm import tqdm
 
-# from sklearn.metrics import pairwise_distances as pdist2
+def sec_to_str(sec):
+    m, s = divmod(sec, 60)
+    h, m = divmod(m,   60)
+    return u"{}:{:02d}:{:02d}".format(int(h),int(m),int(s))
+
+def ProgressBar(it, refresh=10):
+    """
+    refresh=10: refresh the time estimate at least every 10 sec.
+    """
+
+    L = len(it)
+    steps = {x:y for x, y in zip(np.linspace(0,L,  min(100,L), endpoint=False, dtype=int), 
+                                np.linspace(0,100,min(100,L), endpoint=False, dtype=int))}
+                                    
+    block = u"\u2588"                                     
+    partial_block = ["", u"\u258E",u"\u258C",u"\u258A"] # quarter and half block chars
+
+    start = now = time.time()
+    timings = " [0:00:00, -:--:--]"
+    for nn,item in enumerate(it):
+        if nn in steps:
+            done = block*int(steps[nn]/4.0) + partial_block[int(steps[nn]%4)]
+            todo = " "*(25-len(done))
+            bar = u"{}% |{}{}|".format(steps[nn], done, todo)
+            if nn>0:
+                now = time.time()
+                timings = " [{}, {}]".format(sec_to_str(now-start), sec_to_str((now-start)*(L/float(nn)-1)))
+            sys.stdout.write("\r"+bar+timings)
+            sys.stdout.flush()
+        elif time.time()-now > refresh:
+            now = time.time()
+            timings = " [{}, {}]".format(sec_to_str(now-start), sec_to_str((now-start)*(L/float(nn)-1)))
+            sys.stdout.write("\r"+bar+timings)
+            sys.stdout.flush()
+        yield item
+    
+    bar  = u"{:d}% |{}|".format(100, block*25)
+    timings = " [{}, 0:00:00]\n".format(sec_to_str(time.time()-start))
+    sys.stdout.write("\r"+bar+timings)
+    sys.stdout.flush()
+
 
 def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     """
@@ -38,20 +78,22 @@ def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
     temp = np.zeros(iterations)
     time = np.zeros(iterations)
 
+    time_int = 0.
     time_sq = 0.
     time_rdf = 0.
 
     try:
-        # for i in tqdm(range(1, iterations + 1)):
-        for i in range(1, iterations + 1):
+        for i in ProgressBar(range(1, iterations + 1), 40):
+            start_int = timeit.default_timer()
             syst.integrator.run(steps)
             start_rdf = timeit.default_timer()
+            time_int += start_rdf - start_int
             r, rdf = syst.analysis.rdf(rdf_type="rdf", type_list_a=type_part,
                                     type_list_b=type_part, r_min=r_min,
                                     r_max=r_max, r_bins=bins)
 
-            time_rdf += timeit.default_timer() - start_rdf
             start_sq = timeit.default_timer()
+            time_rdf += start_sq - start_rdf
             # q, s_q = syst.analysis.structure_factor_uniform(
             q, s_q = syst.analysis.structure_factor_fast(
             # q, s_q = syst.analysis.structure_factor(
@@ -59,19 +101,17 @@ def get_bulk(syst, timestep, iterations, steps, type_part=[0]):
                 # sf_types=type_part, sf_order=order)
 
             time_sq += timeit.default_timer() - start_sq
+
             sq_data[i - 1, :] = s_q
             rdf_data[i - 1, :] = rdf
             temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
             time[i - 1] = syst.time
-            # if (i % 128) == 0:
-            #     now = timeit.default_timer()
-            #     print(('sample run {}/{}, temperature = {:.3f}, '
-            #            'system time = {:.1f} (real time = {:.1f})').format(
-            #         i, iterations, temp[i - 1], syst.time, now - start))
+
     except KeyboardInterrupt:
         pass
 
-    print('fraction of time', time_sq / (time_sq + time_rdf))
+    tot = time_int + time_rdf + time_sq
+    print('\nTotal Time: {}, Split: Integration- {:.2f}, RDF- {:.2f}, SQ- {:.2f}'.format(sec_to_str(tot),time_int/tot, time_rdf/tot, time_sq/tot))
 
     return rdf_data, r, sq_data, q, temp, time - time[0]
 
@@ -97,171 +137,6 @@ def get_phi(syst, radius, type_a=0, type_b=0):
         # phi[i] = energies['total'] - energies['kinetic']
         phi[i] = energies['non_bonded']
         syst.part.clear()
-
         # syst.part[2].remove()
 
     return phi
-
-
-# def sample_henderson(syst, dt, iterations, steps, n_part, mu_repeat,
-#                      r, dr, bins, input_file):
-#     """
-#     repeat the cavity sampling for a given number of iterations
-#     returns:
-#         cav = (cav) array(iterations,bins)
-#         mu = (mu) array(iterations)
-#     """
-#     print("\nSampling Cavity\n")
-
-#     tables = np.loadtxt(input_file)
-
-#     start = timeit.default_timer()
-
-#     syst.time_step = dt
-
-#     cav = np.zeros((iterations, bins))
-#     mu = np.zeros(iterations)
-
-#     cav_repeat = np.ceil(10 * r**2).astype(int)
-
-#     for q in range(iterations):
-#         print('sample run {}/{}'.format(q + 1, iterations))
-#         mu[q]= get_mu(syst, n_part, mu_repeat, tables)
-#         cav[q, :] = get_cavity(syst, n_part, cav_repeat, dr, bins, tables)
-
-#         syst.integrator.run(steps)
-#         now = timeit.default_timer()
-#         print('sample run {}/{} (real time = {:.1f})'.format(
-#             q + 1, iterations, now - start))
-
-#     return cav, mu
-
-# def get_cavity(syst, n_part, n_repeat, dr, bins, tables):
-
-#     E = syst.analysis.energy()
-#     curtemp = E['kinetic'] / (1.5 * (n_part))
-
-#     # fast calculation of the Cavity correlation
-#     true_pos = np.vstack(np.copy(syst.part[:].pos_folded))
-#     # true_pos = np.vstack(syst.part[:].pos)
-#     # true_pos = np.mod(true_pos, syst.box_l[0])
-#     cav_fast = np.zeros(bins)
-
-#     for k in range(bins):
-#         for i, true_r in enumerate(true_pos):
-#             ghost_pos = np.mod(vec_on_sphere(n_repeat[k]) * k * dr + true_r, syst.box_l[0])
-#             gt_dist = pdist2(np.delete(true_pos, i, axis=0), ghost_pos)
-#             E_fast = np.sum(np.interp(gt_dist, tables[0, :], tables[1, :]), axis = 0)
-#             cav_fast[k] += np.mean(np.exp(-E_fast/curtemp), axis = 0)
-
-#     cav_fast = cav_fast/n_part
-
-#     # # slow calculation of the Cavity correlation
-#     # cav = np.zeros(bins)
-#     # cav_count = np.zeros(bins)
-
-#     # # for j in range(n_part):
-#     # for j in range(10):
-#     #     orig_pos = np.array(syst.part[j].pos)
-#     #     syst.part[j].type = 1
-#     #     E_j = syst.analysis.energy()["non_bonded"]
-#     #     syst.part[j].type = 0
-#     #     for k in range(bins):
-#     #         for l in range(n_repeat[k]):
-#     #             syst.part[j].pos = np.ravel(orig_pos + vec_on_sphere() * k * dr).tolist()
-#     #             E_refj = syst.analysis.energy()["non_bonded"]
-#     #             cav[k] += np.exp(-(E_refj - E_j) / curtemp)
-#     #             cav_count[k] += 1
-#     #     if ((j+1) % 128) == 0:
-#     #         print(('checking particle {}/{}').format(j+1, n_part))
-
-#     #     syst.part[j].pos = orig_pos
-
-#     # cav_slow = cav / cav_count
-
-#     # exit()
-
-#     return cav_fast
-
-
-# def vec_on_sphere(n_repeat=1):
-#     vec = np.random.randn(3,n_repeat)
-#     vec /= np.linalg.norm(vec, axis=0)
-#     return vec.T
-
-
-# def remove_diag(x):
-#     x_no_diag = np.ndarray.flatten(x)
-#     x_no_diag = np.delete(x_no_diag, range(0, len(x_no_diag), len(x) + 1), axis=0)
-#     x_no_diag = x_no_diag.reshape(len(x), len(x) - 1)
-#     return x_no_diag
-
-
-# def get_mu(syst, n_part, n_repeat, tables):
-#     """ currently mu fast is 10 times larger?"""
-
-#     E_ref = syst.analysis.energy()
-#     curtemp = E_ref['kinetic'] / (1.5 * n_part)
-
-#     start = timeit.default_timer()
-
-#     # fast calculation of chemical potential
-#     true_pos = np.vstack(np.copy(syst.part[:].pos_folded))
-#     # true_pos = np.vstack(syst.part[:].pos)
-#     # true_pos = np.mod(true_pos, syst.box_l[0])
-
-#     ghost_pos = np.random.random((n_repeat, 3)) * syst.box_l
-#     gt_dist = pdist2(true_pos, ghost_pos)
-#     E_fast = np.sum(np.interp(gt_dist, tables[0, :], tables[1, :]), axis = 0)
-#     mu_fast = np.mean(np.exp(-E_fast/curtemp), axis = 0)
-#     end_fast = timeit.default_timer()
-
-#     # # slow calculation of chemical potential
-#     # E_slow = np.zeros_like(E_fast)
-#     # syst.part.add(id=n_part + 1, pos=syst.box_l / 2., type=0)
-#     # for i in range(n_repeat):
-#     #     syst.part[n_part + 1].pos = ghost_pos[i,:]
-#     #     E_slow[i] = syst.analysis.energy()["non_bonded"] - E_ref["non_bonded"]
-#     # syst.part[n_part + 1].remove()
-#     # mu_slow = np.mean(np.exp(-E_slow/curtemp), axis = 0)
-#     # end_slow = timeit.default_timer()
-
-#     # # print results
-#     # print("fast {}, time {}".format(mu_fast, start-end_fast))
-#     # print("slow {}, time {}".format(mu_slow, end_fast-end_slow))
-
-#     return mu_fast
-
-
-
-# def get_pos_vel(syst, timestep, iterations, steps):
-#     """
-#     save the unfolded particle positions and velocity
-#     """
-
-#     print("\nSampling\n")
-
-#     start = timeit.default_timer()
-#     n_part = len(syst.part.select())
-#     syst.time_step = timestep
-
-#     pos = np.zeros((iterations, 3*n_part))
-#     vel = np.zeros((iterations, 3*n_part))
-
-#     temp = np.zeros(iterations)
-#     time = np.zeros(iterations)
-
-#     for i in range(iterations):
-#         syst.integrator.run(steps)
-#         pos[i,:] = np.copy(syst.part[:].pos).reshape(-1)
-#         vel[i,:] = np.copy(syst.part[:].v).reshape(-1)
-
-#         temp[i - 1] = syst.analysis.energy()['kinetic'] / (1.5 * n_part)
-#         time[i - 1] = syst.time
-#         if (i % 128) == 0:
-#             now = timeit.default_timer()
-#             print(('sample run {}/{}, temperature = {:.3f}, '
-#                    'system time = {:.1f} (real time = {:.1f})').format(
-#                 i, iterations, temp[i - 1], syst.time, now - start))
-
-#     return pos, vel, temp, time - time[0]

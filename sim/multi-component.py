@@ -20,8 +20,8 @@ def main():
     sampling_iterations = 1024
     sampling_steps = 16
 
-    n_part = 1024
-    n_solv = 1024
+    n_part = 512
+    n_solv = 512
 
     density = 0.8
     
