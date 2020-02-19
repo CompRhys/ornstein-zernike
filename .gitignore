@@ -116,3 +116,5 @@ dmypy.json
 # exclude inputsfile
 *inputs.txt
 sim/core/henderson.py
+*PM.png
+*AM.png
