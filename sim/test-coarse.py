@@ -21,25 +21,25 @@ def main(input_file, density, temperature, dr, dt,
     initialise.disperse_energy(system, temperature, dt)
 
     # Integrate the system to warm up to specified temperature
-    initialise.equilibrate_system(system, dt,
-                                  temperature, burn_steps,
-                                  burn_iterations_max)
+    # initialise.equilibrate_system(system, dt,
+    #                               temperature, burn_steps,
+    #                               burn_iterations_max)
 
     # Sample the RDF for the system
-    rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
-                                             sampling_iterations, 
-                                             sampling_steps)
+    # rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
+    #                                          sampling_iterations, 
+    #                                          sampling_steps)
 
     # Extract the interaction potential used by the model
     phi = sample.get_phi(system, r)
 
     # save the results
-    _, pot_type, pot_number = input_file.split("_")
-    pot_number = re.findall('\d+', pot_number)[-1]
+    _, approx_type, mix_type = input_file.split("_")
+    mix_type, _ = mix_type.split(".")
 
     # save rdf
     f_rdf = os.path.join(output_path,'rdf_{}_{}_p{}_b{}_t{}.dat'.format(
-        pot_type, pot_number, density, box_size, temperature))
+        approx_type, mix_type, density, box_size, temperature))
 
     if os.path.isfile(f_rdf):
         rdf_out = rdf
@@ -51,7 +51,7 @@ def main(input_file, density, temperature, dr, dt,
 
     # save sq
     f_sq = os.path.join(output_path,'sq_{}_{}_p{}_b{}_t{}.dat'.format(
-        pot_type, pot_number, density, box_size, temperature))
+        approx_type, mix_type, density, box_size, temperature))
 
     if os.path.isfile(f_sq):
         sq_out = sq
@@ -63,7 +63,7 @@ def main(input_file, density, temperature, dr, dt,
 
     # save phi
     f_phi = os.path.join(output_path,'phi_{}_{}.dat'.format(
-        pot_type, pot_number))
+        approx_type, mix_type))
 
     if os.path.isfile(f_phi):
         pass
@@ -73,7 +73,7 @@ def main(input_file, density, temperature, dr, dt,
 
     # save temp
     f_temp = os.path.join(output_path,'temp_{}_{}_p{}_b{}_t{}.dat'.format(
-        pot_type, pot_number, density, box_size, temperature))
+       approx_type, mix_type, density, box_size, temperature))
 
     if os.path.isfile(f_temp):
         temp_old = np.loadtxt(f_temp)

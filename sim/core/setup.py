@@ -27,7 +27,7 @@ def setup_box(input_file, rho, box_l, n_test=0):
 
     bulk_potentials(syst, input_file)
 
-    return syst, n_part
+    return syst
 
 
 def bulk_potentials(system, input_file):
