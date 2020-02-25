@@ -35,6 +35,9 @@ def get_data(directory):
             test_case = np.loadtxt(path_to_file, delimiter=',')
 
             start = test_case.shape[0] - np.argmax(np.flip(np.isnan(test_case[:,-1])))
+            start_fg = test_case.shape[0] - np.argmax(np.flip(np.isnan(test_case[:,-1])))
+
+            test_case[:,-3] *= np.sqrt(int(float(density[1:]) * (20.**3.)))
 
             pot_type = labels.index(pot_type) * np.ones((test_case.shape[0]))
             pot_id = float(pot_id) * np.ones((test_case.shape[0]))
@@ -65,8 +68,8 @@ def take_group(data, axis, group=[]):
 def main(directory, path):
     data = get_data(directory)
 
-    names = ["pot_type", "pot_id", "density", "r", "phi", "tcf", "err_tcf", "grad_tcf", "err_grad_tcf",
-            "dcf", "err_dcf", "grad_dcf", "err_grad_dcf", "br_swtch", "err_br_swtch"]
+    names = ["pot_type", "pot_id", "density", "r", "phi", "avg_tcf", "err_tcf", "avg_dcf", "err_dcf", "avg_icf", "err_icf", 
+                "avg_grad_icf", "err_grad_icf", "fd_gr", "avg_br", "err_br"]
 
     assert len(names) == data.shape[1]
 
