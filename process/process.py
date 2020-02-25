@@ -40,10 +40,10 @@ if __name__ == "__main__":
 
         output = np.vstack(data).T
  
-        names = ["r", "phi", "tcf", "err_tcf", "grad_tcf", "err_grad_tcf",
-            "dcf", "err_dcf", "grad_dcf", "err_grad_dcf", "br_swtch", "err_br_swtch"]
+        names = ["r", "phi", "avg_tcf", "err_tcf", "avg_dcf", "err_dcf", "avg_icf", "err_icf", 
+                "avg_grad_icf", "err_grad_icf", "fd_gr", "avg_br", "err_br"]
 
-        assert len(names) == output.shape[1]
+        assert len(names) == output.shape[1], "{} {}".format(len(names), output.shape)
 
         names = ','.join(names)
 

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys
 import re
 import os
@@ -9,80 +8,91 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 from tensorflow.python.keras.models import load_model
 
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, butter
+
+from scipy.optimize import curve_fit
+
 
 matplotlib.rcParams.update({'font.size': 12})
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+def backstrapolate(r, phi):
+    assert len(r.shape) == len(phi.shape), "dimensions are not correct"
+
+    cav = r.shape[0] - phi.shape[0]
+
+    phi_ex = np.zeros_like(r)
+
+    def polynom(r, a, b, c):
+        return a * np.exp(b*r) + c
+
+    popt, pcov = curve_fit(polynom, r[cav:cav+20], phi[:20])
+
+    phi_ex[cav:] = phi
+    phi_ex[:cav] = polynom(r[:cav], *popt)
+
+    return r, phi_ex
 
 
-def plot_funcs(r, avg_tcf, err_tcf, avg_grad_tcf_sg, err_grad_tcf_sg, 
-                avg_dcf_swtch, err_dcf_swtch, avg_grad_dcf_swtch_sg, err_grad_dcf_swtch_sg):
+def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf, fd_gr,):
+    """
+    plot some stuff
+    """
+    mask_var = fd_gr.shape[0]- np.sum(np.isfinite(fd_gr))
+    mask_avg = np.argmax(avg_tcf + 1.> 1e-8)
 
-    X_down = np.vstack((avg_tcf, avg_dcf_swtch, avg_grad_tcf_sg - avg_grad_dcf_swtch_sg)).T
+    print(mask_avg, mask_var, r[mask_var])
+    mask = np.max((mask_avg, mask_var))
 
-    # # ind = np.argmax(avg_tcf + 1. > 0.1).astype(int)
-    # ind_max = np.argmax(avg_grad_tcf_sg).astype(int)
-    # ind_min = np.argmin(avg_grad_tcf_sg).astype(int)
+    X_down = np.vstack((avg_tcf[mask:], avg_dcf[mask:], fd_gr[mask:], avg_grad_icf[mask:])).T
 
-    # # ind = (ind_max + np.where(np.sign(avg_grad_tcf_sg[ind_max:ind_min-1]) != np.sign(avg_grad_tcf_sg[ind_max+1:ind_min]))[0] + 1)[0]
-
-    # # ind = ind_max
-    ind = 0
-
-    # tcf_ind = np.argmax(avg_tcf + 1. > 0.001).astype(int)
-
-    # phi_ibi = np.zeros_like(avg_tcf)
-    # phi_ibi[tcf_ind:] = -np.log(avg_tcf[tcf_ind:] + 1.)
-    # phi_ibi[:tcf_ind] = np.arange(tcf_ind)*()
-    # print(phi_ibi)
-
-    phi_ibi = -np.log(avg_tcf + 1.)
-
-    phi_id = np.min(np.argwhere(np.isfinite(phi_ibi)))
-
-    phi_ibi[:phi_id] = phi_ibi[phi_id] + np.arange(1,phi_id+1)[::-1]*(phi_ibi[phi_id]-phi_ibi[phi_id+1])
-
+    # Get IBI potential
+    phi_ibi = -np.log(avg_tcf[mask:] + 1.)
 
     # Get HNC potential
-    phi_hnc = avg_tcf - avg_dcf_swtch + phi_ibi
+    phi_hnc = avg_tcf[mask:] - avg_dcf[mask:] + phi_ibi
 
-    # Get Local Closure Potential
-    br_la = np.zeros_like(avg_tcf)
-    local = load_model('learn/models/local-scaled-small-batch.h5', compile=False)
-    br_la[ind:] = local.predict(X_down[ind:,0:2]).ravel()
-    # br_la[ind:] = savgol_filter(local.predict(X_down[ind:,0:2]).ravel(), window_length=51, polyorder=3, delta=r[1]-r[0])
-
-    phi_la  =  phi_hnc + br_la
-    # phi_la -= local.predict(np.zeros((1,2))).ravel()
-
-    # Get Non-Local Closure Potential
-    br_nla = np.zeros_like(avg_tcf)
-    non_local = load_model('learn/models/non-local-scaled.h5', compile=False)
-    br_nla[ind:] = non_local.predict(X_down[ind:,0:3]).ravel()
-    # br_nla[ind:] = savgol_filter(non_local.predict(X_down[ind:,0:4]).ravel(), window_length=21, polyorder=3, delta=r[1]-r[0])
-
+    ## Get Non-Local Closure Potential
+    non_local = load_model('learn/models/non-local-400.h5', compile=False)
+    br_nla = non_local.predict(X_down[:,0:4]).ravel()
     phi_nla  =  phi_hnc + br_nla
-    # phi_nla -= non_local.predict(np.zeros((1,3))).ravel()
+    f_nla = -np.gradient(phi_nla, r[1]-r[0])
 
+    br_nla_s = savgol_filter(br_nla, window_length=21, polyorder=2, deriv=0, delta=r[1]-r[0])
+    phi_nla_s  =  phi_hnc + br_nla_s
 
+    r, phi_ibi = backstrapolate(r, phi_ibi)
+    r, phi_hnc = backstrapolate(r, phi_hnc)
+    r, phi_nla_s = backstrapolate(r, phi_nla_s)
 
-    # phi_nla_sg = savgol_filter(phi_nla, window_length=21, polyorder=3, delta=r[1]-r[0])
+    f_ibi = -np.gradient(phi_ibi, r[1]-r[0])
+    f_hnc = -np.gradient(phi_hnc, r[1]-r[0])
+    # f_nla_s = -np.gradient(phi_nla_s, r[1]-r[0])
 
-    # print(bridge.shape, phi_ibi.shape, phi_hnc.shape, phi_mlp.shape)
+    # f_ibi = -savgol_filter(phi_ibi, window_length=31, polyorder=2, deriv=1, delta=r[1]-r[0])
+    # f_hnc = -savgol_filter(phi_hnc, window_length=31, polyorder=2, deriv=1, delta=r[1]-r[0])
+    f_nla_s = -savgol_filter(phi_nla_s, window_length=7, polyorder=2, deriv=1, delta=r[1]-r[0])
 
+    #Save the potentials
     output_path = "data/test/down/"
-
-    # save phi
-    f_phi = os.path.join(output_path,'phi_{}'.format("lj_mix"))
-    # f_phi = os.path.join(output_path,'phi_{}'.format("ss_wca"))
-
-    f_la = -savgol_filter(phi_la, window_length=11, polyorder=3, deriv=1 , delta=r[1]-r[0])
     r_cut_ind = np.argmin(r<3)
 
-    # if os.path.isfile(f_phi):
-    #     pass
-    # else:
-    phi_out = np.vstack((r[:r_cut_ind], phi_la[:r_cut_ind], f_la[:r_cut_ind]))
-    np.savetxt(f_phi, phi_out)
+    # save phi
+    mix_type = "lj-mix"
+    file_ibi = os.path.join(output_path,'phi_ibi_{}.dat'.format(mix_type))
+    file_hnc = os.path.join(output_path,'phi_hnc_{}.dat'.format(mix_type))
+    file_nla = os.path.join(output_path,'phi_nla_{}.dat'.format(mix_type))
+
+    out_ibi = np.vstack((r[:r_cut_ind], phi_ibi[:r_cut_ind], f_ibi[:r_cut_ind]))
+    np.savetxt(file_ibi, out_ibi)
+
+    out_hnc = np.vstack((r[:r_cut_ind], phi_hnc[:r_cut_ind], f_hnc[:r_cut_ind]))
+    np.savetxt(file_hnc, out_hnc)
+
+    out_nla = np.vstack((r[:r_cut_ind], phi_nla_s[:r_cut_ind], f_nla_s[:r_cut_ind]))
+    np.savetxt(file_nla, out_nla)
+
+    # plot
 
     fig, axes = plt.subplots(2, 3, figsize=(18, 8))
 
@@ -95,42 +105,56 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_grad_tcf_sg, err_grad_tcf_sg,
     axes[0, 0].set_xlabel('r/$\sigma$')
     axes[0, 0].set_ylabel('$g(r)$')
 
-    axes[1, 0].plot(r, avg_grad_tcf_sg)
-    axes[1, 0].fill_between(r, avg_grad_tcf_sg + err_grad_tcf_sg, avg_grad_tcf_sg - err_grad_tcf_sg, alpha=0.2)
-    axes[1, 0].set_xlabel('r/$\sigma$')
-    axes[1, 0].set_ylabel('$g\'(r)$')
-
     # Plot c(r)
 
-    axes[0, 1].plot(r, avg_dcf_swtch, label='$c_{sw}(r)$')
-    axes[0, 1].fill_between(r, avg_dcf_swtch + err_dcf_swtch, avg_dcf_swtch - err_dcf_swtch, alpha=0.2)
+    axes[0, 1].plot(r, avg_dcf, label='$c_{sw}(r)$')
+    axes[0, 1].fill_between(r, avg_dcf + err_dcf, avg_dcf - err_dcf, alpha=0.2)
 
     axes[0, 1].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
     axes[0, 1].set_xlabel('r/$\sigma$')
     axes[0, 1].set_ylabel('$c(r)$')
     axes[0, 1].legend()
 
-    axes[1, 1].plot(r, avg_grad_dcf_swtch_sg)
-    axes[1, 1].fill_between(r, avg_grad_dcf_swtch_sg + err_grad_dcf_swtch_sg, 
-                            avg_grad_dcf_swtch_sg - err_grad_dcf_swtch_sg, alpha=0.2)
+    # plot y'(r)
+
+    axes[1, 1].plot(r, avg_grad_icf)
+    axes[1, 1].fill_between(r, avg_grad_icf + err_grad_icf, avg_grad_icf - err_grad_icf, alpha=0.2)
     axes[1, 1].set_xlabel('r/$\sigma$')
-    axes[1, 1].set_ylabel('$c\'(r)$')
+    axes[1, 1].set_ylabel('$\gamma\'(r)$')
+
+    # plot b(r)
 
     axes[0, 2].plot(r, np.zeros_like(r), label="HNC")
-    axes[0, 2].plot(r, br_la, label="LA")
-    axes[0, 2].plot(r, br_nla, label="NLA")
+    axes[0, 2].plot(r[mask:], br_nla, label="NLA")
+    axes[0, 2].plot(r[mask:], br_nla_s, label="NLA-SG")
+    axes[0, 2].set_xlabel('r/$\sigma$')
+    axes[0, 2].set_ylabel('$b(r)$')
     axes[0, 2].legend()
 
-    # phi=np.loadtxt("data/raw/phi_csw_05.dat")[1,:].ravel()
+    # Phi(r)
 
     axes[1, 2].plot(r,phi_ibi, label="IBI")
     axes[1, 2].plot(r,phi_hnc, label="HNC")
-    axes[1, 2].plot(r,phi_la ,  label="LA")
-    axes[1, 2].plot(r,phi_nla,  label="NLA")
-    # axes[1, 2].plot(r,phi_nla_sg,  label="NLA-SG")
-    # axes[1, 2].plot(r,phi,  label="True")
-    axes[1, 2].set_ylim((-2,5))
+    axes[1, 2].plot(r[mask:],phi_nla,  label="NLA", alpha=0.3)
+    axes[1, 2].plot(r,phi_nla_s, label="NLA-SG")
+    axes[1, 2].set_xlim((0,3))
+    axes[1, 2].set_ylim((-2,6))
+    axes[1, 2].set_xlabel('r/$\sigma$')
+    axes[1, 2].set_ylabel('$\phi(r)$')
     axes[1, 2].legend()
+
+    ## f(r)
+
+    axes[1, 0].plot(r,f_ibi, '--', label="IBI")
+    axes[1, 0].plot(r,f_hnc, '--', label="HNC")
+    axes[1, 0].plot(r[mask:],f_nla, '--', label="NLA", alpha=0.3)
+    axes[1, 0].plot(r,f_nla_s, '--', label="NLA-SG")
+    # axes[1, 0].plot(r,f_nla_sg, '--', label="NLA-SG")
+    axes[1, 0].set_xlim((0,3))
+    axes[1, 0].set_ylim((-20,50))
+    axes[1, 0].set_xlabel('r/$\sigma$')
+    axes[1, 0].set_ylabel('$f(r)$')
+    axes[1, 0].legend()
 
     fig.tight_layout()
 

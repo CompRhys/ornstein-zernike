@@ -12,80 +12,88 @@ from scipy.signal import savgol_filter
 matplotlib.rcParams.update({'font.size': 12})
 
 
-def plot_funcs(r, phi, avg_tcf, err_tcf, avg_grad_tcf, err_grad_tcf, 
-                avg_grad_tcf_sg, err_grad_tcf_sg, 
-                avg_dcf_swtch, err_dcf_swtch, avg_grad_dcf_swtch, err_grad_dcf_swtch,
-                avg_grad_dcf_swtch_sg, err_grad_dcf_swtch_sg,
-                avg_dcf_dir, err_dcf_dir, avg_dcf_fft, err_dcf_fft,
-                avg_br_swtch, err_br_swtch):
+def plot_funcs( r, phi, 
+                avg_tcf, err_tcf, 
+                fd_gr, fd_gr_sg,  
+                avg_dcf, err_dcf,
+                avg_icf, err_icf, 
+                avg_grad_icf, err_grad_icf,
+                avg_dcf_dir, err_dcf_dir, 
+                avg_dcf_fft, err_dcf_fft,
+                avg_br, err_br):
+
+    plt.plot(r, fd_gr)
+    plt.plot(r, fd_gr_sg)
+    plt.ylim((0,1e-3))
 
     fig, axes = plt.subplots(2, 3, figsize=(18, 8))
 
-    # Plot phi(r)
-
-    axes[0, 0].plot(r, phi)
-    axes[0, 0].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
-    axes[0, 0].set_ylim([-3, 8])
-    axes[0, 0].set_xlabel('r/$\sigma$')
-    axes[0, 0].set_ylabel('$\phi(r)$')
-
     # Plot g(r)
 
-    axes[0, 1].plot(r, avg_tcf + 1)
-    axes[0, 1].fill_between(r, avg_tcf + err_tcf + 1, avg_tcf - err_tcf + 1, alpha=0.3)
+    axes[0, 0].plot(r, avg_tcf + 1)
+    axes[0, 0].fill_between(r, avg_tcf + err_tcf + 1, avg_tcf - err_tcf + 1, alpha=0.3)
 
-    axes[0, 1].plot((r[0],r[-1]), np.ones(2), '--', color="tab:blue")
-    axes[0, 1].set_xlabel('r/$\sigma$')
-    axes[0, 1].set_ylabel('$g(r)$')
-
-    axes[1,1].plot(r, avg_grad_tcf)
-    axes[1,1].fill_between(r, avg_grad_tcf + err_grad_tcf, avg_grad_tcf - err_grad_tcf, alpha=0.2)
-
-    axes[1,1].plot(r, avg_grad_tcf_sg)
-    axes[1,1].fill_between(r, avg_grad_tcf_sg + err_grad_tcf_sg, avg_grad_tcf_sg - err_grad_tcf_sg, alpha=0.2)
-    axes[1, 1].set_xlabel('r/$\sigma$')
-    axes[1, 1].set_ylabel('$g\'(r)$')
+    axes[0, 0].plot((r[0],r[-1]), np.ones(2), '--', color="tab:blue")
+    axes[0, 0].set_xlabel('r/$\sigma$')
+    axes[0, 0].set_ylabel('$g(r)$')
 
     # Plot c(r)
 
-    axes[0, 2].plot(r, avg_dcf_fft, label='$c_{fft}(r)$')
-    axes[0, 2].fill_between(r, avg_dcf_fft + err_dcf_fft, avg_dcf_fft - err_dcf_fft, alpha=0.2)
+    axes[0, 1].plot(r, avg_dcf_fft, label='$c_{fft}(r)$')
+    axes[0, 1].fill_between(r, avg_dcf_fft + err_dcf_fft, avg_dcf_fft - err_dcf_fft, alpha=0.2)
 
-    axes[0, 2].plot(r, avg_dcf_swtch, label='$c_{sw}(r)$')
-    axes[0, 2].plot(r, avg_dcf_swtch-avg_tcf, label='$diff$')
-    axes[0, 2].fill_between(r, avg_dcf_swtch + err_dcf_swtch, avg_dcf_swtch - err_dcf_swtch, alpha=0.2)
+    axes[0, 1].plot(r, avg_dcf, label='$c_{sw}(r)$')
+    axes[0, 1].fill_between(r, avg_dcf + err_dcf, avg_dcf - err_dcf, alpha=0.2)
+
+    axes[0, 1].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
+    axes[0, 1].set_xlabel('r/$\sigma$')
+    axes[0, 1].set_ylabel('$c(r)$')
+    axes[0, 1].legend()
+
+
+    ## plot y(r)
+
+    axes[0, 2].plot(r, avg_icf, label='$c_{sw}(r)$')
+    axes[0, 2].fill_between(r, avg_icf + err_icf, avg_icf - err_icf, alpha=0.2)
 
     axes[0, 2].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
     axes[0, 2].set_xlabel('r/$\sigma$')
-    axes[0, 2].set_ylabel('$c(r)$')
+    axes[0, 2].set_ylabel('$\gamma(r)$')
     axes[0, 2].legend()
 
-    axes[1,2].plot(r, avg_grad_dcf_swtch)
-    axes[1,2].plot(r, avg_grad_dcf_swtch-avg_grad_tcf, label="diff")
-    axes[1,2].fill_between(r, avg_grad_dcf_swtch + err_grad_dcf_swtch, 
-                            avg_grad_dcf_swtch - err_grad_dcf_swtch, alpha=0.2)
-    axes[1,2].plot(r, avg_grad_dcf_swtch_sg)
-    axes[1,2].plot(r, avg_grad_dcf_swtch_sg-avg_grad_tcf_sg, label="diff-sg")
-    axes[1,2].fill_between(r, avg_grad_dcf_swtch_sg + err_grad_dcf_swtch_sg, 
-                            avg_grad_dcf_swtch_sg - err_grad_dcf_swtch_sg, alpha=0.2)
+
+    ## plot y'(r)
+
+    axes[1, 2].plot(r, avg_grad_icf)
+    axes[1, 2].fill_between(r, avg_grad_icf + err_grad_icf, 
+                                avg_grad_icf - err_grad_icf, alpha=0.2)
+
+    axes[1, 2].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
     axes[1, 2].set_xlabel('r/$\sigma$')
-    axes[1, 2].set_ylabel('$c\'(r)$')
+    axes[1, 2].set_ylabel('$\gamma\'(r)$')
     axes[1, 2].legend()
 
+    # Plot phi(r)
+
+    axes[1, 0].plot(r, phi)
+    axes[1, 0].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
+    axes[1, 0].set_ylim([-3, 8])
+    axes[1, 0].set_xlabel('r/$\sigma$')
+    axes[1, 0].set_ylabel('$\phi(r)$')
 
     # # Plot b(r)
 
-    ind = len(r)-len(avg_br_swtch)
+    ind = len(r)-len(avg_br)
 
-    axes[1, 0].plot(r[ind:], avg_br_swtch, label='$b_{sw}(r)$')
-    axes[1, 0].fill_between(r[ind:], avg_br_swtch + err_br_swtch, 
-                        avg_br_swtch - err_br_swtch, alpha=0.2)
+    axes[1, 1].plot(r[ind:], avg_br, label='$b_{sw}(r)$')
+    axes[1, 1].fill_between(r[ind:], avg_br + err_br, 
+                        avg_br - err_br, alpha=0.2)
 
-    axes[1, 0].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
+    axes[1, 1].plot((r[0],r[-1]), np.zeros(2), '--', color="tab:blue")
     # axes[1, 2].set_xlim([0, 3.5])
-    axes[1, 0].set_xlabel('r/$\sigma$')
-    axes[1, 0].set_ylabel('$B(r)$')
-    axes[1, 0].legend(loc=4)
+    axes[1, 1].set_xlabel('r/$\sigma$')
+    axes[1, 1].set_ylabel('$B(r)$')
+    axes[1, 1].legend(loc=4)
 
     fig.tight_layout()
 
@@ -95,15 +103,18 @@ def plot_funcs(r, phi, avg_tcf, err_tcf, avg_grad_tcf, err_grad_tcf,
 def plot_sq_compare(q, switch, avg_sq, err_sq, avg_sq_fft, err_sq_fft,
                     avg_sq_switch, err_sq_switch, block_sq):
     # Plot s(q)
+    matplotlib.rcParams.update({'font.size': 20})
 
     fig, axes = plt.subplots(2, figsize=(6,6), sharex=True, 
-        gridspec_kw={'height_ratios':[3, 1]})
+        gridspec_kw={'height_ratios':[8, 3]},)
+
+    fig.subplots_adjust(hspace=0)
 
     axes[0].plot(q, avg_sq, linewidth=1, marker='x', label='$S_{dir}(q)$')
-    axes[0].plot(q, block_sq.T, linewidth=1, marker='x', alpha=0.2)
+    # axes[0].plot(q, block_sq.T, linewidth=1, marker='x', alpha=0.2)
     axes[0].fill_between(q, avg_sq + err_sq, avg_sq - err_sq, alpha=0.2)
 
-    axes[0].plot(q, avg_sq_fft, linewidth=1, marker='o', mfc='none', label='$S_{fft}(q)$')
+    axes[0].plot(q, avg_sq_fft, color='tab:orange', linewidth=1, marker='o', mfc='none', label='$S_{fft}(q)$')
     axes[0].fill_between(q, avg_sq_fft + err_sq_fft, avg_sq_fft - err_sq_fft, alpha=0.2)
 
     axes[0].plot(q, avg_sq_switch, color='g', marker='+', linewidth=1, label='$S_{sw}(q)$')
@@ -114,11 +125,12 @@ def plot_sq_compare(q, switch, avg_sq, err_sq, avg_sq_fft, err_sq_fft,
     # axes[1, 0].set_ylim([-.5, 4.0])
     axes[0].set_xlabel('$q$')
     axes[0].set_ylabel('$S(q), W(q)$')
-    axes[0].legend()
+    axes[0].legend(markerscale=1, fontsize=12, frameon=False)
 
     axes[1].plot(q, (- avg_sq + avg_sq_fft), linewidth=1, marker='x', label='$\Delta S(q)$')
+    axes[1].fill_between(q, (- avg_sq + avg_sq_fft) + err_sq, (- avg_sq + avg_sq_fft) - err_sq, alpha=0.2)
     axes[1].plot((0,13), (0,0), 'k-.', linewidth=0.5)
-    axes[1].set_xlabel('$q$')
+    axes[1].set_xlabel('$q/\sigma^{-1}$')
     axes[1].set_ylabel('$\Delta S(q)$')
     axes[1].set_xlim([0, 12.5])
     # axes[1].set_ylim([-0.1, 0.3])

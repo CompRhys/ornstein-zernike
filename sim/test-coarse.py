@@ -21,14 +21,14 @@ def main(input_file, density, temperature, dr, dt,
     initialise.disperse_energy(system, temperature, dt)
 
     # Integrate the system to warm up to specified temperature
-    # initialise.equilibrate_system(system, dt,
-    #                               temperature, burn_steps,
-    #                               burn_iterations_max)
+    initialise.equilibrate_system(system, dt,
+                                  temperature, burn_steps,
+                                  burn_iterations_max)
 
     # Sample the RDF for the system
-    # rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
-    #                                          sampling_iterations, 
-    #                                          sampling_steps)
+    rdf, r, sq, q, temp, t = sample.get_bulk(system, dt,
+                                             sampling_iterations, 
+                                             sampling_steps)
 
     # Extract the interaction potential used by the model
     phi = sample.get_phi(system, r)

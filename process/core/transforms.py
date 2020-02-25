@@ -1,10 +1,8 @@
 import numpy as np
 from scipy.fftpack import dst, idst
-# from scipy.interpolate import UnivariateSpline as Spline
-from scipy.interpolate import InterpolatedUnivariateSpline as Spline
-from scipy.signal import savgol_filter
-from scipy.integrate import simps
 from core import block
+from scipy.signal import savgol_filter
+
 
 def hr_to_cr(bins, rho, data, radius, error=None, axis=1):
     """
@@ -139,34 +137,6 @@ def smooth_function(f):
     return g
 
 
-def quadratic_spline_roots(spl):
-    roots = []
-    knots = spl.get_knots()
-    for a, b in zip(knots[:-1], knots[1:]):
-        u, v, w = spl(a), spl((a+b)/2), spl(b)
-        t = np.roots([u+w-2*v, w-u, 2*v])
-        t = t[np.isreal(t) & (np.abs(t) <= 1)]
-        roots.extend(t*(b-a)/2 + (b+a)/2)
-    return np.array(roots)
-
-def spline_max(r, tcf):
-    """
-    we get gradients from taking a cubic spline and then calculating the values for the 
-    gradients from the resulting quadratic spline obtained by taking derivatives of the
-    function spline. In order to define the gradients in a consistent manner we define
-    them wrt to a lengthscale imposed by the principle peak.
-    """
-
-    spl_tcf = Spline(r, tcf, k=3)
-    cr_pts = quadratic_spline_roots(spl_tcf.derivative())
-    cr_pts = np.append(cr_pts, (r[0], r[-1]))  # also check the endpoints of the interval
-    cr_vals = spl_tcf(cr_pts)
-    max_index = np.argmax(cr_vals)
-    # print("Maximum value {} at {}".format(cr_vals[max_index], cr_pts[max_index]))
-    # min_index = np.argmin(cr_vals)
-    # print("Minimum value {} at {}".format(cr_vals[min_index], cr_pts[min_index]))
-    return cr_pts[max_index]
-
 def process_inputs(box_size, temp, input_density, output="process", 
                     **paths):
     """
@@ -203,22 +173,13 @@ def process_inputs(box_size, temp, input_density, output="process",
     block_tcf = block.block_data(tcf, block_size)
     block_sq = block.block_data(sq, block_size)
 
-    ind = np.median(np.argmax(block_tcf + 1. > 0.1, axis=1)).astype(int)
-
     # TCF
     avg_tcf = np.mean(block_tcf, axis=0)
     err_tcf = np.sqrt(np.var(block_tcf, axis=0, ddof=1) / block_tcf.shape[0])
-
-    r_peak = r[np.argmax(avg_tcf)]
-    
-    grad_tcf = np.gradient(block_tcf, r, axis=1)*r_peak
-    avg_grad_tcf = np.mean(grad_tcf, axis=0)
-    err_grad_tcf = np.sqrt(np.var(grad_tcf, axis=0, ddof=1) / block_tcf.shape[0])
-
-    grad_tcf_sg = savgol_filter(block_tcf, window_length=11, polyorder=3, deriv=1, delta=r[1]-r[0], axis=1)*r_peak
-    grad_tcf_sg[:,:ind] = grad_tcf[:,:ind]
-    avg_grad_tcf_sg = np.mean(grad_tcf_sg, axis=0)
-    err_grad_tcf_sg = np.sqrt(np.var(grad_tcf_sg, axis=0, ddof=1) / block_tcf.shape[0])
+    fd_gr = np.var(block_tcf, axis=0, ddof=1)/(avg_tcf+1.)
+    mask = np.where(np.isfinite(fd_gr))
+    fd_gr_sg = np.copy(fd_gr) * np.sqrt(n_part)
+    fd_gr_sg[mask] = savgol_filter(fd_gr[mask], window_length=9, polyorder=1, deriv=0, delta=r[1]-r[0])
 
     # s(q)
     avg_sq = np.mean(block_sq, axis=0)
@@ -232,7 +193,6 @@ def process_inputs(box_size, temp, input_density, output="process",
     err_sq_fft = np.sqrt(np.var(sq_fft, axis=0, ddof=1) / sq_fft.shape[0])
 
     # Switching function w(q)
-    # print(np.argmax(block_sq > 0.75*np.max(block_sq), axis=1))
     peak = np.median(np.argmax(block_sq.T > 0.75*np.max(block_sq, axis=1), axis=0)).astype(int)
 
     after = len(q_fft) - peak 
@@ -249,69 +209,68 @@ def process_inputs(box_size, temp, input_density, output="process",
 
     # evaluate c(r) from corrected s(q)
     dcf_swtch, r_swtch = sq_to_cr(r_bins, density, sq_switch, q_fft)
-    avg_dcf_swtch = np.mean(dcf_swtch, axis=0)
-    err_dcf_swtch = np.sqrt(np.var(dcf_swtch, axis=0, ddof=1) / dcf_swtch.shape[0])
-
-    grad_dcf_swtch_sg = savgol_filter(dcf_swtch, window_length=11, polyorder=3, deriv=1, delta=r[1]-r[0], axis=1)*r_peak
-    avg_grad_dcf_swtch_sg = np.mean(grad_dcf_swtch_sg ,axis=0)
-    err_grad_dcf_swtch_sg = np.sqrt(np.var(grad_dcf_swtch_sg, axis=0, ddof=1) / dcf_swtch.shape[0])
+    avg_dcf = np.mean(dcf_swtch, axis=0)
+    err_dcf = np.sqrt(np.var(dcf_swtch, axis=0, ddof=1) / dcf_swtch.shape[0])
 
     # # c(r) by fourier inversion of just convolved term for comparision
     # dcf_both = transforms.sq_and_hr_to_cr(r_bins, input_density, block_tcf, r, block_sq, q)
     # avg_dcf_both = np.mean(dcf_both, axis=0)
     # err_dcf_both = np.sqrt(np.var(dcf_both, axis=0, ddof=1) / dcf_both.shape[0])
 
+    ## Evaluate y'(r)
+
+    block_icf = block_tcf - dcf_swtch
+    avg_icf = np.mean(block_icf, axis=0)
+    err_icf = np.sqrt(np.var(block_icf, axis=0, ddof=1) / block_icf.shape[0])
+
+    r_peak = r[np.argmax(block_tcf, axis=1)]
+
+    grad_icf = np.gradient(block_icf.T*r_peak, r, axis=0).T
+    avg_grad_icf = np.mean(grad_icf, axis=0)
+    err_grad_icf = np.sqrt(np.var(grad_icf, axis=0, ddof=1) / block_icf.shape[0]) 
+
     # signs = np.where(np.sign(avg_tcf[:-1]) != np.sign(avg_tcf[1:]))[0] + 1
-    # print(signs)
-
-    # kbi_avg_1 = simps(r[:987]**2 * avg_tcf[:987], r[:987])
-    # kbi_avg_2 = simps(r[:937]**2 * avg_tcf[:937], r[:937])
-    # kbi_avg_3 = simps(r[:894]**2 * avg_tcf[:894], r[:894])
-
-    # print(kbi_avg_1, kbi_avg_2, kbi_avg_3)
 
     if output == "plot":
         # evaluate c(r) from h(r)
-        dcf_fft, r_fft = hr_to_cr(r_bins, density, block_tcf, r)
+        dcf_fft, _ = hr_to_cr(r_bins, density, block_tcf, r)
         avg_dcf_fft = np.mean(dcf_fft, axis=0)
         err_dcf_fft = np.sqrt(np.var(dcf_fft, axis=0, ddof=1) / dcf_fft.shape[0])
 
         # evaluate c(r) from s(q)
-        dcf_dir, r_dir = sq_to_cr(r_bins, density, block_sq, q)
+        dcf_dir, _ = sq_to_cr(r_bins, density, block_sq, q)
         avg_dcf_dir = np.mean(dcf_dir, axis=0)
         err_dcf_dir = np.sqrt(np.var(dcf_dir, axis=0, ddof=1) / dcf_dir.shape[0])
 
-        # calculate non-smoothed gradient
-        grad_dcf_swtch = np.gradient(dcf_swtch, r_swtch, axis=1)*r_peak
-        avg_grad_dcf_swtch = np.mean(grad_dcf_swtch ,axis=0)
-        err_grad_dcf_swtch = np.sqrt(np.var(grad_dcf_swtch, axis=0, ddof=1) / dcf_swtch.shape[0])
-
     ## Evaluate B(r)
     if output == "invert":
-        return (r, avg_tcf, err_tcf, avg_grad_tcf_sg, err_grad_tcf_sg, 
-                avg_dcf_swtch, err_dcf_swtch, avg_grad_dcf_swtch_sg, err_grad_dcf_swtch_sg)
+        return (r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf, fd_gr_sg,)
 
     phi = np.loadtxt(paths.get('phi_path'))
     assert np.all(np.abs(r-phi[0,:])<1e-10), "the rdf and phi radii do not match" 
     phi = phi[1,:]
 
-    br_swtch = np.log((block_tcf[:,ind:] + 1.)) + np.repeat(phi[ind:].reshape(-1,1), 
+    ind = np.median(np.argmax(block_tcf + 1. > 0.01, axis=1)).astype(int)
+    block_br = np.log((block_tcf[:,ind:] + 1.)) + np.repeat(phi[ind:].reshape(-1,1), 
                     block_tcf.shape[0], axis=1).T- block_tcf[:,ind:] + dcf_swtch[:,ind:]
-    avg_br_swtch = np.mean(br_swtch, axis=0)
-    err_br_swtch = np.sqrt(np.var(br_swtch, axis=0, ddof=1) / br_swtch.shape[0])
+    avg_br = np.mean(block_br, axis=0)
+    err_br = np.sqrt(np.var(block_br, axis=0, ddof=1) / block_br.shape[0])
 
     if output == "plot":
-        return (r, phi, avg_tcf, err_tcf, avg_grad_tcf, err_grad_tcf, 
-                avg_grad_tcf_sg, err_grad_tcf_sg, 
-                avg_dcf_swtch, err_dcf_swtch, avg_grad_dcf_swtch, err_grad_dcf_swtch,
-                avg_grad_dcf_swtch_sg, err_grad_dcf_swtch_sg,
-                avg_dcf_dir, err_dcf_dir, avg_dcf_fft, err_dcf_fft,
-                avg_br_swtch, err_br_swtch), \
+        return (r, phi, 
+                avg_tcf, err_tcf, 
+                fd_gr, fd_gr_sg,
+                avg_dcf, err_dcf,
+                avg_icf, err_icf, 
+                avg_grad_icf, err_grad_icf,
+                avg_dcf_dir, err_dcf_dir, 
+                avg_dcf_fft, err_dcf_fft,
+                avg_br, err_br), \
                 (q, switch, avg_sq, err_sq, avg_sq_fft, err_sq_fft,
                 avg_sq_switch, err_sq_switch, block_sq)
     else:
-        avg_br_swtch = np.pad(avg_br_swtch, (ind,0), "constant", constant_values=np.NaN)
-        err_br_swtch = np.pad(err_br_swtch, (ind,0), "constant", constant_values=np.NaN)
+        avg_br = np.pad(avg_br, (ind,0), "constant", constant_values=np.NaN)
+        err_br = np.pad(err_br, (ind,0), "constant", constant_values=np.NaN)
 
         # Check if data satifies our cleaning heuristics
         T  = np.loadtxt(paths.get('temp_path'))[:,1]
@@ -323,12 +282,13 @@ def process_inputs(box_size, temp, input_density, output="process",
             passed = False
         elif avg_sq_switch[0] > 1.0:
             passed = False
-        elif np.max(avg_sq_switch) > 2.8:
+        elif np.max(avg_sq) > 2.8:
+            passed = False
+        elif np.max(avg_sq_fft) > 2.8:
             passed = False
         else:
             passed = True
 
-        return passed, (r, phi, avg_tcf, err_tcf, avg_grad_tcf_sg, err_grad_tcf_sg, 
-                avg_dcf_swtch, err_dcf_swtch, avg_grad_dcf_swtch_sg, err_grad_dcf_swtch_sg,
-                avg_br_swtch, err_br_swtch)
+        return passed, (r, phi, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_icf, err_icf, 
+                avg_grad_icf, err_grad_icf, fd_gr_sg, avg_br, err_br)
 
