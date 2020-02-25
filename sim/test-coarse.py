@@ -30,8 +30,6 @@ def main(input_file, density, temperature, dr, dt,
                                              sampling_iterations, 
                                              sampling_steps)
 
-    # Extract the interaction potential used by the model
-    phi = sample.get_phi(system, r)
 
     # save the results
     _, approx_type, mix_type = input_file.split("_")
@@ -60,16 +58,6 @@ def main(input_file, density, temperature, dr, dt,
 
     with open(f_sq, 'ab') as f:
         np.savetxt(f, sq_out)
-
-    # save phi
-    f_phi = os.path.join(output_path,'phi_{}_{}.dat'.format(
-        approx_type, mix_type))
-
-    if os.path.isfile(f_phi):
-        pass
-    else:
-        phi_out = np.vstack((r, phi))
-        np.savetxt(f_phi, phi_out)
 
     # save temp
     f_temp = os.path.join(output_path,'temp_{}_{}_p{}_b{}_t{}.dat'.format(

@@ -54,19 +54,19 @@ def main(output_path):
 
     # Mixture of LJ particles
 
-    # system.non_bonded_inter[1, 0].lennard_jones.set_params(
-    # epsilon=lj_eps*1.1, sigma=lj_sig*0.75, cutoff=2.5, shift='auto')
+    system.non_bonded_inter[1, 0].lennard_jones.set_params(
+    epsilon=lj_eps*1.1, sigma=lj_sig*0.75, cutoff=2.5, shift='auto')
 
-    # system.non_bonded_inter[1, 1].lennard_jones.set_params(
-    # epsilon=lj_eps, sigma=lj_sig*0.5, cutoff=1.5, shift='auto')
+    system.non_bonded_inter[1, 1].lennard_jones.set_params(
+    epsilon=lj_eps, sigma=lj_sig*0.5, cutoff=1.5, shift='auto')
 
     # Repulsive Smooth Step Solvent
 
-    system.non_bonded_inter[1, 0].smooth_step.set_params(
-        d=0.7, n=10, eps=-1, k0=2.5, sig=1.5, cutoff=3,)
+    # system.non_bonded_inter[1, 0].smooth_step.set_params(
+    #     d=0.7, n=10, eps=-1, k0=2.5, sig=1.5, cutoff=3,)
 
-    system.non_bonded_inter[1, 1].wca.set_params(
-    epsilon=lj_eps, sigma=lj_sig*0.6)
+    # system.non_bonded_inter[1, 1].wca.set_params(
+    # epsilon=lj_eps, sigma=lj_sig*0.6)
 
 
     # Disperse Particles to energy minimum

@@ -56,7 +56,6 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf
     non_local = load_model('learn/models/non-local-400.h5', compile=False)
     br_nla = non_local.predict(X_down[:,0:4]).ravel()
     phi_nla  =  phi_hnc + br_nla
-    f_nla = -np.gradient(phi_nla, r[1]-r[0])
 
     br_nla_s = savgol_filter(br_nla, window_length=21, polyorder=2, deriv=0, delta=r[1]-r[0])
     phi_nla_s  =  phi_hnc + br_nla_s
@@ -64,9 +63,11 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf
     r, phi_ibi = backstrapolate(r, phi_ibi)
     r, phi_hnc = backstrapolate(r, phi_hnc)
     r, phi_nla_s = backstrapolate(r, phi_nla_s)
+    r, phi_nla = backstrapolate(r, phi_nla)
 
     f_ibi = -np.gradient(phi_ibi, r[1]-r[0])
     f_hnc = -np.gradient(phi_hnc, r[1]-r[0])
+    f_nla = -np.gradient(phi_nla, r[1]-r[0])
     # f_nla_s = -np.gradient(phi_nla_s, r[1]-r[0])
 
     # f_ibi = -savgol_filter(phi_ibi, window_length=31, polyorder=2, deriv=1, delta=r[1]-r[0])
@@ -82,6 +83,7 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf
     file_ibi = os.path.join(output_path,'phi_ibi_{}.dat'.format(mix_type))
     file_hnc = os.path.join(output_path,'phi_hnc_{}.dat'.format(mix_type))
     file_nla = os.path.join(output_path,'phi_nla_{}.dat'.format(mix_type))
+    file_nla_n = os.path.join(output_path,'phi_nla_n_{}.dat'.format(mix_type))
 
     out_ibi = np.vstack((r[:r_cut_ind], phi_ibi[:r_cut_ind], f_ibi[:r_cut_ind]))
     np.savetxt(file_ibi, out_ibi)
@@ -91,6 +93,9 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf
 
     out_nla = np.vstack((r[:r_cut_ind], phi_nla_s[:r_cut_ind], f_nla_s[:r_cut_ind]))
     np.savetxt(file_nla, out_nla)
+
+    out_nla_n = np.vstack((r[:r_cut_ind], phi_nla[:r_cut_ind], f_nla[:r_cut_ind]))
+    np.savetxt(file_nla_n, out_nla_n)
 
     # plot
 
@@ -135,7 +140,7 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf
 
     axes[1, 2].plot(r,phi_ibi, label="IBI")
     axes[1, 2].plot(r,phi_hnc, label="HNC")
-    axes[1, 2].plot(r[mask:],phi_nla,  label="NLA", alpha=0.3)
+    axes[1, 2].plot(r,phi_nla,  label="NLA", alpha=0.3)
     axes[1, 2].plot(r,phi_nla_s, label="NLA-SG")
     axes[1, 2].set_xlim((0,3))
     axes[1, 2].set_ylim((-2,6))
@@ -145,10 +150,10 @@ def plot_funcs(r, avg_tcf, err_tcf, avg_dcf, err_dcf, avg_grad_icf, err_grad_icf
 
     ## f(r)
 
-    axes[1, 0].plot(r,f_ibi, '--', label="IBI")
-    axes[1, 0].plot(r,f_hnc, '--', label="HNC")
-    axes[1, 0].plot(r[mask:],f_nla, '--', label="NLA", alpha=0.3)
-    axes[1, 0].plot(r,f_nla_s, '--', label="NLA-SG")
+    axes[1, 0].plot(r,f_ibi, label="IBI")
+    axes[1, 0].plot(r,f_hnc, label="HNC")
+    axes[1, 0].plot(r,f_nla, label="NLA", alpha=0.3)
+    axes[1, 0].plot(r,f_nla_s, label="NLA-SG")
     # axes[1, 0].plot(r,f_nla_sg, '--', label="NLA-SG")
     axes[1, 0].set_xlim((0,3))
     axes[1, 0].set_ylim((-20,50))
