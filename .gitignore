@@ -121,3 +121,5 @@ dmypy.json
 sim/core/henderson.py
 *.png
 *.h5
+*.csv
+.vscode/
