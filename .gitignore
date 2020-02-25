@@ -111,10 +111,13 @@ venv.bak/
 dmypy.json
 
 # exclude data folders
-/data
+/data/raw/*
+/data/passed/*
+/data/failed/*
+/data/tables/*
 
 # exclude inputsfile
 *inputs.txt
 sim/core/henderson.py
-*PM.png
-*AM.png
+*.png
+*.h5
