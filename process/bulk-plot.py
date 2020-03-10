@@ -103,12 +103,11 @@ def plot_funcs( r, phi,
 def plot_sq_compare(q, switch, avg_sq, err_sq, avg_sq_fft, err_sq_fft,
                     avg_sq_switch, err_sq_switch, block_sq):
     # Plot s(q)
-    matplotlib.rcParams.update({'font.size': 20})
+    matplotlib.rcParams.update({'font.size': 16})
 
     fig, axes = plt.subplots(2, figsize=(6,6), sharex=True, 
         gridspec_kw={'height_ratios':[8, 3]},)
 
-    fig.subplots_adjust(hspace=0)
 
     axes[0].plot(q, avg_sq, linewidth=1, marker='x', label='$S_{dir}(q)$')
     # axes[0].plot(q, block_sq.T, linewidth=1, marker='x', alpha=0.2)
@@ -123,19 +122,21 @@ def plot_sq_compare(q, switch, avg_sq, err_sq, avg_sq_fft, err_sq_fft,
     axes[0].plot(q, switch, color='r',linewidth=1, marker='*', label='W(q)')
     axes[0].set_xlim([0, 12.5])
     # axes[1, 0].set_ylim([-.5, 4.0])
-    axes[0].set_xlabel('$q$')
-    axes[0].set_ylabel('$S(q), W(q)$')
+    axes[0].set_ylabel('$S(q), W(q)$', labelpad=12)
     axes[0].legend(markerscale=1, fontsize=12, frameon=False)
 
     axes[1].plot(q, (- avg_sq + avg_sq_fft), linewidth=1, marker='x', label='$\Delta S(q)$')
     axes[1].fill_between(q, (- avg_sq + avg_sq_fft) + err_sq, (- avg_sq + avg_sq_fft) - err_sq, alpha=0.2)
     axes[1].plot((0,13), (0,0), 'k-.', linewidth=0.5)
     axes[1].set_xlabel('$q/\sigma^{-1}$')
-    axes[1].set_ylabel('$\Delta S(q)$')
+    axes[1].set_ylabel('$\Delta S(q)$', labelpad=0)
     axes[1].set_xlim([0, 12.5])
-    # axes[1].set_ylim([-0.1, 0.3])
+    axes[1].set_yticks([-0.1, 0.2])
+    axes[1].set_ylim([-0.15, 0.3])
     # axes[1].legend()
     fig.tight_layout()
+
+    fig.subplots_adjust(hspace=0)
 
     return
 
