@@ -9,14 +9,16 @@ This data was then used as an input for the inverse problem of solving to find t
 
 Various machine learning algorithms were applied in order to do this.
 
-The critical results were that symbolic regression over the broad dataset recovers the hypernetted-chain closure showing that a data driven approach is consistent with current analytical theories. The second significant result is that use of a non-local closure relationship offers increased efficacy when compared to local closure relationships. Non-locality is intractable analytically and so this demonstrates the fact that machine learning allows us to gain further predictive insight into physical systems that is otherwise impractical to obtain.
 
 # Instructions for local use:
 * Install comprhys/espresso.git
 * Run tables.py to generate the tables
 * Run system.py to build the input file
 * Use input="`awk "NR==<row>" <input_file>`" to grab a row from the input file
-* Run bulk.py to get the bulk properties and henderson.py to get the cavity results.
-* Run process.py to work out the direct correlation and bridge functions
-* Run clean.py to remove the non-liquid samples
+* Run bulk.py to get the bulk properties
 
+## Cite this work
+That work is availiable on arxiv here: [Coarse-graining and designing liquids with the Ornstein-Zernike equation and machine learnt closures](https://arxiv.org/abs/2004.09114)
+
+## Neurips Workshop
+An early abstract for this work was published as a [workshop submission](https://ml4physicalsciences.github.io/files/NeurIPS_ML4PS_2019_33.pdf) at the Neurips Machine Learning for Physical Sciences Workshop. Since this additional work has been carried out exploring the problem in more depth. The notebooks here have been updated to reflect the more recent work not as it stood at the time of the workshop submission.
