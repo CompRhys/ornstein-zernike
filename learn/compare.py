@@ -30,38 +30,6 @@ print("NLA  MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(rmse(rdf_a
 
 matplotlib.rcParams.update({'font.size': 14})
 
-# fig, axes = plt.subplots(1, 3, figsize=(12,3.5))
-
-# axes[0].plot(r_pot, phi_ibi, '-.',label="IBI")
-# axes[0].plot(r_pot, phi_hnc, '--',label="HNC")
-# axes[0].plot(r_pot, phi_nla, label="NLA")
-# axes[0].set_xlim((0,3))
-# axes[0].set_ylim((-1.5,3))
-# axes[0].set_xlabel('r/$\sigma$')
-# axes[0].set_ylabel('$\phi(r)$')
-# axes[0].plot(r_pot, phi_nla_n, alpha=0.2, color="tab:green")
-
-# axes[1].plot(r_pot, f_ibi, '-.', label="IBI")
-# axes[1].plot(r_pot, f_hnc, '--', label="HNC")
-# axes[1].plot(r_pot, f_nla, label="NLA")
-# axes[1].set_xlim((0,3))
-# axes[1].set_ylim((-12,15))
-# axes[1].set_xlabel('r/$\sigma$')
-# axes[1].set_ylabel('$f(r)$')
-# axes[1].plot(r_pot, f_nla_n, alpha=0.2, color="tab:green")
-
-# axes[2].plot(r_ibi, rdf_ibi, '-.',label="IBI")
-# axes[2].plot(r_ibi, rdf_hnc, '--',label="HNC")
-# axes[2].plot(r_ibi, rdf_nla, label="NLA")
-# axes[2].plot(r, rdf_aim, ':', label="Target")
-# axes[2].set_xlim((0,3))
-# axes[2].set_xlabel('r/$\sigma$')
-# axes[2].set_ylabel('$g(r)$')
-# axes[2].legend(markerscale=1, fontsize=12, frameon=False)
-
-# fig.tight_layout()
-
-
 fig = plt.figure(figsize=(13,5), constrained_layout=False)
 gs1 = fig.add_gridspec(nrows=2, ncols=5, left=0.06, right=0.97, bottom=0.12, top=0.95, wspace=0.6, hspace=0.45)
 ax0 = fig.add_subplot(gs1[0, 0])
@@ -109,3 +77,4 @@ ax3.set_ylabel('$\Delta g(r)$')
 ax3.legend(markerscale=1, fontsize=12, frameon=False)
 
 plt.show()
+plt.savefig("plots/downstream.pdf", dpi=600)
