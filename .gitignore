@@ -115,6 +115,7 @@ dmypy.json
 /data/passed/*
 /data/failed/*
 /data/tables/*
+*.dat
 
 # exclude inputsfile
 *inputs.txt

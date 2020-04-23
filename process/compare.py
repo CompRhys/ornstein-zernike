@@ -4,6 +4,9 @@ import numpy as np
 from sklearn.metrics import mean_squared_error as mse, median_absolute_error as mae
 from scipy.stats import wasserstein_distance as w_dist
 
+def rmse(x_1, x_2):
+    return np.sqrt(mse(x_1,x_2))
+
 rdf_aim = np.loadtxt("data/test/rdf_lj_mix_p0.8_n6400_t1.0.dat")
 r = rdf_aim[0,:]
 rdf_aim = np.mean(rdf_aim[1:,:], axis=0)
@@ -18,11 +21,11 @@ _, phi_hnc, f_hnc = np.loadtxt("data/test/down/phi_hnc_lj-mix.dat")
 _, phi_nla, f_nla = np.loadtxt("data/test/down/phi_nla_lj-mix.dat")
 _, phi_nla_n, f_nla_n = np.loadtxt("data/test/down/phi_nla_n_lj-mix.dat")
 
-print("IBI MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(mse(rdf_aim, rdf_ibi), mse(rdf_aim, rdf_ibi), 
+print("IBI MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(rmse(rdf_aim, rdf_ibi), mae(rdf_aim, rdf_ibi), 
                                                         w_dist(rdf_aim, rdf_ibi), w_dist(r**2*rdf_aim, r**2*rdf_ibi)))
-print("HNC MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(mse(rdf_aim, rdf_hnc), mae(rdf_aim, rdf_hnc), 
+print("HNC MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(rmse(rdf_aim, rdf_hnc), mae(rdf_aim, rdf_hnc), 
                                                         w_dist(rdf_aim, rdf_hnc), w_dist(r**2*rdf_aim, r**2*rdf_hnc)))
-print("NLA  MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(mse(rdf_aim, rdf_nla), mae(rdf_aim, rdf_nla), 
+print("NLA  MSE: {:.4f} MAE: {:.4f} WAS: {:.3f} WASR2: {:.3f}".format(rmse(rdf_aim, rdf_nla), mae(rdf_aim, rdf_nla), 
                                                         w_dist(rdf_aim, rdf_nla), w_dist(r**2*rdf_aim, r**2*rdf_nla)))
 
 matplotlib.rcParams.update({'font.size': 14})
@@ -99,8 +102,8 @@ ax3.plot(r_ibi, rdf_ibi-rdf_aim, '-.', linewidth=2.5, label="IBI")
 ax3.plot(r_ibi, rdf_hnc-rdf_aim, '--', linewidth=2.5, label="HNC")
 ax3.plot(r_ibi, rdf_nla-rdf_aim, linewidth=2.5, label="NLA")
 ax3.plot(r, np.zeros_like(r), ':', linewidth=2.5, label="Target")
-ax3.set_xlim((0,3))
-ax3.set_ylim((-0.5,0.5))
+ax3.set_xlim((0.8,3))
+ax3.set_ylim((-0.4,0.4))
 ax3.set_xlabel('r/$\sigma$')
 ax3.set_ylabel('$\Delta g(r)$')
 ax3.legend(markerscale=1, fontsize=12, frameon=False)
