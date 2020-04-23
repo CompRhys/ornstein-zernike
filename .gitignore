@@ -118,9 +118,6 @@ dmypy.json
 *.dat
 
 # exclude inputsfile
-*inputs.txt
-sim/core/henderson.py
 *.png
-*.h5
 *.csv
 .vscode/
